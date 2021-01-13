@@ -1,0 +1,49 @@
+<!doctype html>
+
+<html lang="en">
+
+	<head>
+
+		<meta charset="utf-8">
+		<title>Gazetteer</title>
+		<meta name="description" content="Gazetteer">
+		<meta name="author" content="Sławomir Blok">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link href="favicon.ico" rel="ico">
+		<link href="css/style.css" rel="stylesheet">
+		<link href="vendors/bootstrap/bootstrap.min.css" rel="stylesheet">
+		<link href="vendors/leaflet/leaflet.css" rel="stylesheet" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+		<script src="vendors/leaflet/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+		<script src="vendors/leaflet/leaflet-providers.js"></script>
+	</head>
+
+	<body>
+
+		<header>
+			<nav>
+				<select id="countryList" name="countryList"></select>
+				<button id="fitBtn">Fit map</button>
+				<button id="locateMeBtn">Locate me</button>
+			</nav>
+		</header>
+
+		<main>
+			<div id="gtmap"></div>
+		</main>
+
+		<footer>
+			<p>This website uses <a href="http://www.geonames.org">GeoNames</a></p>
+		</footer>
+
+		<div id="preloader">
+		</div>
+
+		<script src="vendors/jquery/jquery-2.2.3.min.js"></script>
+		<script src="vendors/bootstrap/bootstrap.min.js"></script>
+		
+		<script src="js/script.js"></script>
+
+	</body>
+
+</html>
