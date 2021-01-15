@@ -12,6 +12,10 @@ main {
     flex-grow: 1;
 }
 
+.footer-special {
+    font-size: 0.6rem;
+}
+
 #preloader {
     position: fixed;
     top: 0;

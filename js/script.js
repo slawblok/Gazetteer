@@ -3,32 +3,43 @@ let gtmap;
 
 function fitMap() {
 	gtmap.eachLayer(function(layer) {
-		if (layer.getAttribution() == "CountryBorders") {
+		if (layer.getAttribution() == " ") {
 			//gtmap.fitBounds(layer.getBounds());	// by jump
 			gtmap.flyToBounds(layer.getBounds());	// by animation
 		}
 	});
 }
 
-// load available information to it
+// load country core information to map
 function updateMap(data) {
 	
-	// print for development purpose
-	console.log("Object returned by php/getCountry.php:");
-	console.log(data);
-	
-	// clear previous country border layer and add new
+	// clear previous country border and capitol layer and add new
 	gtmap.eachLayer(function(layer) {
-		if (layer.getAttribution() == "CountryBorders") {
+		if (layer.getAttribution() == " ") {
 			gtmap.removeLayer(layer);
 		}
 	});
-	var countryBorders = L.geoJSON(data.countryBorders.data.feature, {attribution: "CountryBorders"});
-	gtmap.addLayer(countryBorders);
+	var countryBorders = L.geoJSON(data.countryBorders);
+	
+	// creates a violet marker with the coffee icon
+	var redMarker = L.ExtraMarkers.icon({
+		icon: 'bi-geo-alt',
+		markerColor: 'green',
+		shape: 'circle',
+		prefix: 'bi',
+	  });
+	var countryCapitol = L.marker(L.latLng(data.capitalCoordinates.latitude, data.capitalCoordinates.longitude), {icon: redMarker});
+	var countryBorderAndCapitol = L.featureGroup([countryBorders, countryCapitol], {attribution: " "});
+	gtmap.addLayer(countryBorderAndCapitol);
 
 	// fit map zoom to new country border layer
 	fitMap();
-	
+
+}
+
+// load detailed information about location to popup
+function showDetails(data) {
+
 }
 
 // fit map to current country boundary
@@ -43,7 +54,6 @@ $('#countryList').on('change', function () {
 		data: {
 			type: "name",
 			name: $('#countryList option:selected').text(),
-			iso_a3: $('#countryList option:selected').val(),
 		},		
 		success: function(result) {
 			updateMap(result);
@@ -57,13 +67,11 @@ $('#countryList').on('change', function () {
 
 // obtain country core informations based on user's position
 function getCountryByPosition() {
-
 	var options = {
 		enableHighAccuracy: true,
 		timeout: 5000,
 		maximumAge: 0
 	};
-	
 	function success(pos) {
 		$.ajax({
 			url: "php/getCountry.php",
@@ -76,7 +84,7 @@ function getCountryByPosition() {
 			},		
 			success: function(result) {
 				// select country on drop down list and update the map
-				$('#countryList').val(result.openCage.data.components['ISO_3166-1_alpha-3']);
+				$('#countryList').val(result.openCage.iso_a3);
 				updateMap(result);
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
@@ -85,11 +93,9 @@ function getCountryByPosition() {
 			}
 		});
 	}
-	
 	function error(err) {
 		console.warn(`ERROR(${err.code}): ${err.message}`);
 	}
-
 	window.navigator.geolocation.getCurrentPosition(success, error, options);
 }
 
@@ -102,6 +108,24 @@ $(window).on('load', function () {
 	gtmap = L.map('gtmap');
 	gtmap.setView([51.505, -0.09], 13); // default London
 	gtmap.addLayer(L.tileLayer.provider('OpenStreetMap.Mapnik'));
+	gtmap.on('dblclick', function(event) {
+		$.ajax({
+			url: "php/getLocation.php",
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				latitude: event.latlng.lat,
+				longitude: event.latlng.lng,
+			},		
+			success: function(result) {
+				showDetails(result);
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.log("request failed");
+				console.log(jqXHR);
+			}
+		});
+	});
 	
 	// get country list and populate select options
 	$.ajax({
@@ -109,8 +133,8 @@ $(window).on('load', function () {
 		type: 'GET',
 		dataType: 'json',			
 		success: function(result) {
-			result.data.forEach(element => {
-				$('#countryList').append($('<option></option>').text(element.name).val(element.iso_a3));
+			result.countryList.forEach(country => {
+				$('#countryList').append($('<option></option>').text(country.name).val(country.iso_a3));
 			});
 			$('#countryList').val('GBR');	// default United Kingdom
 		},
