@@ -1,40 +1,32 @@
-// global variable
-let gtmap;
+// global variables
+var gtmap;
+var countryBorderAndCapitol;
 
 function fitMap() {
-	gtmap.eachLayer(function(layer) {
-		if (layer.getAttribution() == " ") {
-			//gtmap.fitBounds(layer.getBounds());	// by jump
-			gtmap.flyToBounds(layer.getBounds());	// by animation
-		}
-	});
+	//gtmap.fitBounds(countryBorderAndCapitol.getBounds());	// by jump
+	gtmap.flyToBounds(countryBorderAndCapitol.getBounds());	// by animation
 }
 
 // load country core information to map
 function updateMap(data) {
+	countryBorderAndCapitol.clearLayers();
+
+	// country border polygon
+	L.geoJSON(data.countryBorders).addTo(countryBorderAndCapitol);
 	
-	// clear previous country border and capitol layer and add new
-	gtmap.eachLayer(function(layer) {
-		if (layer.getAttribution() == " ") {
-			gtmap.removeLayer(layer);
-		}
-	});
-	var countryBorders = L.geoJSON(data.countryBorders);
-	
-	// creates a violet marker with the coffee icon
+	// capitol marker
 	var redMarker = L.ExtraMarkers.icon({
 		icon: 'bi-geo-alt',
 		markerColor: 'green',
 		shape: 'circle',
 		prefix: 'bi',
 	  });
-	var countryCapitol = L.marker(L.latLng(data.capitalCoordinates.latitude, data.capitalCoordinates.longitude), {icon: redMarker});
-	var countryBorderAndCapitol = L.featureGroup([countryBorders, countryCapitol], {attribution: " "});
-	gtmap.addLayer(countryBorderAndCapitol);
-
+	L.marker(L.latLng(data.capitalCoordinates.latitude, data.capitalCoordinates.longitude), {
+		icon: redMarker
+	}).addTo(countryBorderAndCapitol);
+	
 	// fit map zoom to new country border layer
 	fitMap();
-
 }
 
 // load detailed information about location to popup
@@ -108,6 +100,9 @@ $(window).on('load', function () {
 	gtmap = L.map('gtmap');
 	gtmap.setView([51.505, -0.09], 13); // default London
 	gtmap.addLayer(L.tileLayer.provider('OpenStreetMap.Mapnik'));
+	countryBorderAndCapitol = L.featureGroup();
+	gtmap.addLayer(countryBorderAndCapitol);
+
 	gtmap.on('dblclick', function(event) {
 		$.ajax({
 			url: "php/getLocation.php",

@@ -1,5 +1,8 @@
+html, body, main {
+    width: 100%;
+}
 
-html, body, #gtmap {
+html, body {
     height: 100%;
 }
 
@@ -10,10 +13,6 @@ body {
 
 main {
     flex-grow: 1;
-}
-
-.footer-special {
-    font-size: 0.6rem;
 }
 
 #preloader {

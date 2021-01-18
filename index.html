@@ -15,6 +15,7 @@
 		<link href="vendors/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 		<script src="vendors/bootstrap/js/bootstrap.min.js"></script>
 		<link href="vendors/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+
 		<link href="vendors/leaflet/css/leaflet.css" rel="stylesheet"/>
 		<script src="vendors/leaflet/js/leaflet.js"></script>
 		<script src="vendors/leaflet-providers/js/leaflet-providers.js"></script>
@@ -27,40 +28,66 @@
 
 		<header>
 			<nav class="navbar navbar-dark bg-dark">
-				<div class="container-fluid justify-content-start">
+				<div class="container-fluid justify-content-start px-0">
 					<form class="d-flex form-select-sm mx-1">
 						<select class="form-select" id="countryList" name="countryList"></select>
 					</form>
-					<button class="btn btn-outline-success btn-md mx-1" id="fitBtn">Fit</button>
-					<button class="btn btn-outline-success btn-md mx-1" id="locateMeBtn">Locate</button>
+					<button class="btn btn-outline-success btn-md mx-1" id="fitBtn" title="Fit map to country boundary"><i class="bi bi-fullscreen"></i><span class="d-none d-sm-inline ms-1">Fit</span></button>
+					<button class="btn btn-outline-success btn-md mx-1" id="locateMeBtn" title="Locate my country"><i class="bi bi-geo"></i><span class="d-none d-sm-inline ms-1">Locate</span></button>
 				</div>
 			</nav>
 		</header>
 
-		<main>
-			<div id="gtmap"></div>
-		</main>
-
+		<main id="gtmap"></main>
+		
 		<footer class="footer bg-light">
-			<div class="container footer-special">
-				<p class="mb-0 text-center">&copy; Sławomir Blok 2021</p>
-				<ul class="list-inline mb-0 text-center">
+			<div class="container">
+
+				<p class="mb-0 text-center">&copy; Sławomir Blok 2021 <span class="d-md-none" data-bs-toggle="modal" data-bs-target="#contributionsModal">| Contributions</span></p>
+				
+				<!-- Contributions for for big screen-->
+				<ul class="list-inline mb-0 text-center d-none d-md-block">
 					<li class="list-inline-item">This website uses: </li>
-					<!-- <li class="list-inline-item">&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</li> -->
 					<li class="list-inline-item">&copy; <a href="http://www.geonames.org">GeoNames</a></li>
 					<li class="list-inline-item">&copy; <a href="https://opencagedata.com">OpenCage</a></li>
 					<li class="list-inline-item">&copy; <a href="https://openweathermap.org">OpenWeather</a></li>
-					<!-- <li class="list-inline-item">&copy; <a href="https://leafletjs.com">Leflet</a></li> -->
 					<li class="list-inline-item">&copy; <a href="https://github.com/leaflet-extras/leaflet-providers">Leaflet Providers</a></li>
 					<li class="list-inline-item">&copy; <a href="https://github.com/coryasilva/Leaflet.ExtraMarkers">Leaflet ExtraMarkers</a></li>
 					<li class="list-inline-item">&copy; <a href="https://getbootstrap.com/">Bootstrap</a></li>
 					<li class="list-inline-item">&copy; <a href="https://icons.getbootstrap.com/">Bootstrap Icons</a></li>
 					<li class="list-inline-item">&copy; <a href="https://jquery.com/">JQuery</a></li>
 				</ul>
-				</span>
+
 			</div>
 		</footer>
 
+		<!-- Contributions for small screens -->
+		<div class="modal fade" id="contributionsModal" tabindex="-1" aria-labelledby="contributionsModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="contributionsModalLabel">This website uses:</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<ul>
+							<li>&copy; <a href="http://www.geonames.org">GeoNames</a></li>
+							<li>&copy; <a href="https://opencagedata.com">OpenCage</a></li>
+							<li>&copy; <a href="https://openweathermap.org">OpenWeather</a></li>
+							<li>&copy; <a href="https://github.com/leaflet-extras/leaflet-providers">Leaflet Providers</a></li>
+							<li>&copy; <a href="https://github.com/coryasilva/Leaflet.ExtraMarkers">Leaflet ExtraMarkers</a></li>
+							<li>&copy; <a href="https://getbootstrap.com/">Bootstrap</a></li>
+							<li>&copy; <a href="https://icons.getbootstrap.com/">Bootstrap Icons</a></li>
+							<li>&copy; <a href="https://jquery.com/">JQuery</a></li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+  
 		<div id="preloader">
 		</div>
 
