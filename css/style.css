@@ -15,6 +15,11 @@ main {
     flex-grow: 1;
 }
 
+#ci_flag {
+    max-width: 200px;
+    height: auto;
+}
+
 #preloader {
     position: fixed;
     top: 0;

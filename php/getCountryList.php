@@ -33,7 +33,6 @@
             $countryList = array();
             foreach ($fileArray['features'] as $feature) {
                 // remove unnecesary data
-                unset($feature['properties']['iso_a2']);
                 unset($feature['properties']['iso_n3']);
                 // add remaining data to array
                 array_push($countryList, $feature['properties']);
