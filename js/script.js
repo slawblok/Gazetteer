@@ -72,14 +72,30 @@ function showCoreInfo(data) {
 		$('#ci_timeZoneNameShort').text(data.openCage.timezone.short_name+' or GMT'+data.openCage.timezone.offset_string);
 	}
 	$('#ci_driveOn').text(data.openCage.drive_on);
-
+	$('#ci_currencyName').text(data.openCage.currency.name);
+	$('.ci_currencySymbol').text(data.openCage.currency.symbol);
 }
 
 // show country flag and language
-function showFlagLang (data) {
+function showFlagLang(data) {
 	// load information to Bootstrap modal
 	$('#ci_language').text(data.restCountries.languages[0].name);
 	$('#ci_flag').attr('src', data.restCountries.flag);
+}
+
+// show country currency exchange rates to few major currencies
+function showExchangeRates(data) {
+	var base = data.exchangeRates.base;
+	$('#ci_buyMajor').empty();
+	$('#ci_sellMajor').empty();
+	var symbol = $('.ci_currencySymbol').text();
+	symbol = symbol.substring(0, symbol.length/2);
+	for (var key in data.exchangeRates[base]){
+		var infoBuy = data.exchangeRates[base][key].toPrecision(3).toLocaleString()+' '+key;
+		var infoSell = data.exchangeRates[key][base].toPrecision(3).toLocaleString()+' '+symbol+' to get 1 '+key;
+		$('#ci_buyMajor').append($('<li></li>').text(infoBuy));
+		$('#ci_sellMajor').append($('<li></li>').text(infoSell));
+	}
 }
 
 // load detailed information about location to popup
@@ -141,13 +157,31 @@ function fittingWaitingDisable() {
 // #                 obtaining information section                        #
 // ########################################################################
 
-function getFlagLang(countryId) {
+function getExchangeRates(data) {
+	$.ajax({
+		url: "php/getExchangeRate.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			currency: data.openCage.currency.iso_code,
+		},		
+		success: function(result) {
+			showExchangeRates(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getFlagLang(data) {
 	$.ajax({
 		url: "php/getFlagLang.php",
 		type: 'POST',
 		dataType: 'json',
 		data: {
-			countryId: countryId,
+			countryId: data.countryId,
 		},		
 		success: function(result) {
 			showFlagLang(result);
@@ -177,7 +211,8 @@ function getCountryByName() {
 		success: function(result) {
 			fittingWaitingDisable();
 			showCoreInfo(result);
-			getFlagLang(result.countryId);
+			getFlagLang(result);
+			getExchangeRates(result);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			fittingWaitingDisable();
@@ -212,7 +247,8 @@ function getCountryByPosition() {
 				// select country on drop down list and update the map
 				$('#countryList').val(result.countryBorders.properties.iso_a2);
 				showCoreInfo(result);
-				getFlagLang(result.countryId);
+				getFlagLang(result);
+				getExchangeRates(result);
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				localisationWaitingDisable();
@@ -233,10 +269,10 @@ $('#countryList').on('change', getCountryByName);
 $('#locateMeBtn').on('click', getCountryByPosition);
 
 $(window).on('load', function () {
-	
+
 	// map initialize
 	setupMap();
-	
+
 	// get information about specific location
 	gtmap.on('dblclick', function(event) {
 		$.ajax({
@@ -256,7 +292,7 @@ $(window).on('load', function () {
 			}
 		});
 	});
-	
+
 	// get country list and populate select options
 	fittingWaitingEnable();
 	$.ajax({

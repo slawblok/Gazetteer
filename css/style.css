@@ -18,6 +18,7 @@ main {
 #ci_flag {
     max-width: 200px;
     height: auto;
+    border: 1px solid gray;
 }
 
 #preloader {
