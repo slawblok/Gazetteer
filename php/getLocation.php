@@ -25,7 +25,7 @@
 	// build OpenWeatherMap API URL
 	$url = $openWatherMapBaseUrl;
 	$url .= '&lat='.$_REQUEST['latitude'].'&lon='.$_REQUEST['longitude'];
-	$url .= '&appid='.$apiKeys->openweathermap;
+	$url .= '&appid='.$apiKeys->openweathermap->key;
 	$url .= '&exclude=minutely,hourly';	// limit amount of information
     $url .= '&units=standard';
     $url .= '&lang=en';

@@ -9,6 +9,23 @@ var timeZoneOffset = 0;
 // #                          display section                             #
 // ########################################################################
 
+function setupClock() {
+	var analogClock = initClockAt('analogClock');
+	setInterval(function (){
+		var now = new Date();
+		var utc_now = new Date(Date.UTC(now.getUTCFullYear(),
+									 now.getUTCMonth(),
+									 now.getUTCDate(),
+									 now.getUTCHours(),
+									 now.getUTCMinutes(),
+									 now.getUTCSeconds(),
+									 now.getUTCMilliseconds()));
+		utc_now.setUTCSeconds(utc_now.getUTCSeconds() + timeZoneOffset);
+		$('#ci_time').text(utc_now.toLocaleTimeString('en-GB'));
+		updateClock(analogClock, utc_now);
+	}, 1000);
+}
+
 function setupMap() {
 	gtmap = L.map('gtmap', {
 		doubleClickZoom: false,
@@ -76,50 +93,6 @@ function showCoreInfo(data) {
 	$('.ci_currencySymbol').text(data.openCage.currency.symbol);
 }
 
-// show country flag and language
-function showFlagLang(data) {
-	// load information to Bootstrap modal
-	$('#ci_language').text(data.restCountries.languages[0].name);
-	$('#ci_flag').attr('src', data.restCountries.flag);
-}
-
-// show country currency exchange rates to few major currencies
-function showExchangeRates(data) {
-	var base = data.exchangeRates.base;
-	$('#ci_buyMajor').empty();
-	$('#ci_sellMajor').empty();
-	var symbol = $('.ci_currencySymbol').text();
-	symbol = symbol.substring(0, symbol.length/2);
-	for (var key in data.exchangeRates[base]){
-		var infoBuy = data.exchangeRates[base][key].toPrecision(3).toLocaleString()+' '+key;
-		var infoSell = data.exchangeRates[key][base].toPrecision(3).toLocaleString()+' '+symbol+' to get 1 '+key;
-		$('#ci_buyMajor').append($('<li></li>').text(infoBuy));
-		$('#ci_sellMajor').append($('<li></li>').text(infoSell));
-	}
-}
-
-// load detailed information about location to popup
-function showDetails(data) {
-
-}
-
-function setupClock() {
-	var analogClock = initClockAt('analogClock');
-	setInterval(function (){
-		var now = new Date();
-		var utc_now = new Date(Date.UTC(now.getUTCFullYear(),
-									 now.getUTCMonth(),
-									 now.getUTCDate(),
-									 now.getUTCHours(),
-									 now.getUTCMinutes(),
-									 now.getUTCSeconds(),
-									 now.getUTCMilliseconds()));
-		utc_now.setUTCSeconds(utc_now.getUTCSeconds() + timeZoneOffset);
-		$('#ci_time').text(utc_now.toLocaleTimeString('en-GB'));
-		updateClock(analogClock, utc_now);
-	}, 1000);
-}
-
 // fit map to current country boundary
 $('#fitBtn').click(function() {
 	gtmap.flyToBounds(countryBorderAndCapitol.getBounds());
@@ -153,9 +126,114 @@ function fittingWaitingDisable() {
 	$('#fitBtn > i').show();
 }
 
+// show country flag and language
+function showFlagLang(data) {
+	// load information to Bootstrap modal
+	$('#ci_language').text(data.restCountries.languages[0].name);
+	$('#ci_flag').attr('src', data.restCountries.flag);
+}
+
+// show country currency exchange rates to few major currencies
+function showExchangeRates(data) {
+	var base = data.exchangeRates.base;
+	$('#ci_buyMajor').empty();
+	$('#ci_sellMajor').empty();
+	var symbol = $('.ci_currencySymbol').text();
+	symbol = symbol.substring(0, symbol.length/2);
+	for (var key in data.exchangeRates[base]){
+		var infoBuy = data.exchangeRates[base][key].toPrecision(3).toLocaleString()+' '+key;
+		var infoSell = data.exchangeRates[key][base].toPrecision(3).toLocaleString()+' '+symbol+' to get 1 '+key;
+		$('#ci_buyMajor').append($('<li></li>').text(infoBuy));
+		$('#ci_sellMajor').append($('<li></li>').text(infoSell));
+	}
+}
+
+function monthName(number) {
+	switch(number) {
+		case 0: {
+			return 'January';
+		}
+		case 1: {
+			return 'February';
+		}
+		case 2: {
+			return 'March';
+		}
+		case 3: {
+			return 'April';
+		}
+		case 4: {
+			return 'May';
+		}
+		case 5: {
+			return 'June';
+		}
+		case 6: {
+			return 'July';
+		}
+		case 7: {
+			return 'August';
+		}
+		case 8: {
+			return 'September';
+		}
+		case 9: {
+			return 'October';
+		}
+		case 10: {
+			return 'November';
+		}
+		case 11: {
+			return 'December';
+		}
+	}
+}
+
+// show national holidays
+function showHolidays(data) {
+	var number = data.calendarific.length;
+	$('#ci_nh_number').text(number);
+	if (number>0) {
+		$('#ci_nh_year').text(data.calendarific[0].date.datetime.year);
+	}
+	$('#ci_nh').empty();
+	data.calendarific.forEach(function(holiday) {
+		var datetime = holiday.date.datetime;
+		var dateFormated = datetime.day + ' of ' + monthName(datetime.month-1);
+		var info = dateFormated+', '+holiday.name;
+		$('#ci_nh').append($('<li></li>').text(info));
+	});
+}
+
+// load detailed information about location to popup
+function showDetails(data) {
+
+}
+
 // ########################################################################
 // #                 obtaining information section                        #
 // ########################################################################
+
+function getHolidays(data) {
+	var date = new Date();
+	var year = date.getFullYear();
+	$.ajax({
+		url: "php/getHolidays.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			countryId: data.countryId,
+			year: year,
+		},		
+		success: function(result) {
+			showHolidays(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
 
 function getExchangeRates(data) {
 	$.ajax({
@@ -213,6 +291,7 @@ function getCountryByName() {
 			showCoreInfo(result);
 			getFlagLang(result);
 			getExchangeRates(result);
+			getHolidays(result);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			fittingWaitingDisable();
@@ -249,6 +328,7 @@ function getCountryByPosition() {
 				showCoreInfo(result);
 				getFlagLang(result);
 				getExchangeRates(result);
+				getHolidays(result);
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				localisationWaitingDisable();

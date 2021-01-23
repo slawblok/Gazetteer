@@ -19,6 +19,7 @@
 	// #                      https://opencagedata.com                        # 
 	// #                     time zone, currency, drivign side                #
 	// ########################################################################
+	// There is 2500 requests/day in free plan.
 
 	$openCageBaseUrl = 'https://api.opencagedata.com/geocode/v1/json?q=';
 
@@ -57,7 +58,7 @@
 			$url .= $_REQUEST['latitude'].'+'.$_REQUEST['longitude'];
 		} break;
 	}
-	$url .= '&key='.$apiKeys->opencagedata;
+	$url .= '&key='.$apiKeys->opencagedata->key;
 	$url .= '&limit=1';	// limit results to one
 	// request OpenCage
 	$ch = curl_init();
@@ -167,6 +168,7 @@
 	// #                      https://www.geonames.org/                       # 
 	// #                 capital, population, area, bounding box              #
 	// ########################################################################
+	// There is 30,000 credits/day and 1000credits/hour in free plan.
 
 	$geoNamesBaseUrl = 'http://api.geonames.org/';
 
@@ -175,7 +177,7 @@
 	$url .= 'countryInfoJSON?';
 	$url .= 'formatted=true';
 	$url .= '&country='.$output['countryId']['iso_a2'];
-	$url .= '&username='.$apiKeys->geonames;
+	$url .= '&username='.$apiKeys->geonames->username;
 	$url .= '&style=full';
 
 	// request GeoNames
@@ -208,6 +210,7 @@
 	// #                      https://opencagedata.com                        # 
 	// #                        capital coordinates                           #
 	// ########################################################################
+	// There is 2500 requests/day in free plan.
 
 	if (is_null($output['geoNames']['capital']) || empty($output['geoNames']['capital'])) {
 		// if there is no capital, than use country center coordinates to place the marker
@@ -218,7 +221,7 @@
 		// build OpenCage API URL
 		$url = $openCageBaseUrl;
 		$url .= urlencode($output['geoNames']['capital']);
-		$url .= '&key='.$apiKeys->opencagedata;
+		$url .= '&key='.$apiKeys->opencagedata->key;
 		$url .= '&limit=1';	// limit results to one
 		$url .= '&no_annotations=1'; // limit amount of information
 		// request OpenCage

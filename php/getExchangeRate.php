@@ -6,19 +6,14 @@
     $apiKeys = json_decode(file_get_contents("APIKeys.json"));
     $output = NULL;
 
-    // helper function to save copy values
-	function copy_if_exist($key, $array) {
-		if (array_key_exists($key, $array)) {
-			return $array[$key];
-		} else {
-			return NULL;
-		}
-    }
-    
     // ########################################################################
 	// #                   https://openexchangerates.org/                     #
-	// #                            exchange rate                             #
+    // #                            exchange rate                             #
 	// ########################################################################
+    // There is 1000 requests/month in free plan.
+    // True/False to reduce API usage, durign development.
+    // If False, it will return fixed, dummy rates.
+    $enable = $apiKeys->openexchangerates->enable;
 
 	$exchangeRateBaseUrl = 'https://openexchangerates.org/api/';
 
@@ -28,7 +23,7 @@
 	// build Open Exchange Rate API URL
     $url = $exchangeRateBaseUrl;
     $url .= 'latest.json?';
-    $url .= 'app_id='.$apiKeys->openexchangerates;
+    $url .= 'app_id='.$apiKeys->openexchangerates->key;
     $url .= '&symbols='.$baseCurrency;
     foreach($majorCurrencies as $major) {
         $url .= ','.$major;
@@ -38,23 +33,33 @@
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($ch, CURLOPT_URL, $url);
-    $response=curl_exec($ch); // NOTE: commented out to reduce API usage
+    $response = TRUE;
+    if ($enable) {
+        $response=curl_exec($ch);
+    }
     curl_close($ch);
 	// convert data to array
 	if ($response === FALSE) {
 		$output['exchangeRates']['error'] = 'Failed to get exchange rates';
 	} else {
-		$results = json_decode($response, TRUE);
+        $results = NULL;
+        $rates = NULL;
+        if ($enable) {
+            $results = json_decode($response, TRUE);
+            $rates = $results['rates'];
+        }
 		// store information
         //$output['exchangeRatesRaw'] = $results;
         // calculate exchange rate between country currency and other major currencies
         // NOTE: OpenExchengeRates provides only exchange to USD in free plan;
         // thus the exchange rate is calculated as follow:
         // country currency -> USD -> desire major currency
-        $rates = $results['rates']; // NOTE: commented out to reduce API usage
         foreach($majorCurrencies as $major) {
             if ($major != $baseCurrency) {
-                $exchange = $rates[$baseCurrency]/$rates[$major]; // NOTE: commented out to reduce API usage
+                $exchange = 1;
+                if ($enable) {
+                    $exchange = $rates[$baseCurrency]/$rates[$major];
+                }
                 $output['exchangeRates'][$major][$baseCurrency] = $exchange;
                 $output['exchangeRates'][$baseCurrency][$major] = 1/$exchange;
             }
