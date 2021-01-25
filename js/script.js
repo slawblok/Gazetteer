@@ -1,4 +1,4 @@
-import {initClockAt, updateClock} from './analogclock.js';
+import {initClockAt, updateClock} from '../vendors/analogclock/analogclock.js';
 
 // global variables
 var gtmap;
@@ -205,6 +205,71 @@ function showHolidays(data) {
 	});
 }
 
+// show Covid-19 statistics
+function showCovid19(data) {
+
+	var canvasConfirmed = document.getElementById("covid19_confirmed");
+	var canvasRecovered = document.getElementById("covid19_recovered");
+	var canvasDeaths = document.getElementById("covid19_deaths");
+
+	context = canvasConfirmed.getContext('2d');
+	context.clearRect(0, 0, canvasConfirmed.width, canvasConfirmed.height);
+
+	context = canvasRecovered.getContext('2d');
+	context.clearRect(0, 0, canvasRecovered.width, canvasRecovered.height);
+
+	context = canvasDeaths.getContext('2d');
+	context.clearRect(0, 0, canvasDeaths.width, canvasDeaths.height);
+
+	var dataConfirmed = {
+		"xName": "Days",
+		"yName": "Cases",
+		"cols": data.covid19.days,
+		"data": [
+			{ 
+				"name": "Confirmed", 
+				"values": data.covid19.confirmedDaily
+			}
+		]
+	};
+
+	var dataRecovered = {
+		"xName": "Days",
+		"yName": "Cases",
+		"cols": data.covid19.days,
+		"data": [
+			{ 
+				"name": "Recovered", 
+				"values": data.covid19.recoveredDaily
+			}
+		]
+	};
+
+	var dataDeaths = {
+		"xName": "Days",
+		"yName": "Cases",
+		"cols": data.covid19.days,
+		"data": [
+			{ 
+				"name": "Deaths", 
+				"values": data.covid19.deathsDaily
+			}
+		]
+	};
+	
+	chartify(canvasConfirmed, dataConfirmed, {
+		"dataColor": "blue"
+	});
+
+	chartify(canvasRecovered, dataRecovered, {
+		"dataColor": "green"
+	});
+
+	chartify(canvasDeaths, dataDeaths, {
+		"dataColor": "black"
+	});
+}
+
 // load detailed information about location to popup
 function showDetails(data) {
 
@@ -213,6 +278,26 @@ function showDetails(data) {
 // ########################################################################
 // #                 obtaining information section                        #
 // ########################################################################
+
+function getCovid19(data) {
+	var date = new Date();
+	var year = date.getFullYear();
+	$.ajax({
+		url: "php/getCovid19.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			countryId: data.countryId,
+		},		
+		success: function(result) {
+			showCovid19(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
 
 function getHolidays(data) {
 	var date = new Date();
@@ -292,6 +377,7 @@ function getCountryByName() {
 			getFlagLang(result);
 			getExchangeRates(result);
 			getHolidays(result);
+			getCovid19(result);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			fittingWaitingDisable();
@@ -329,6 +415,7 @@ function getCountryByPosition() {
 				getFlagLang(result);
 				getExchangeRates(result);
 				getHolidays(result);
+				getCovid19(result);
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				localisationWaitingDisable();
@@ -356,7 +443,7 @@ $(window).on('load', function () {
 	// get information about specific location
 	gtmap.on('dblclick', function(event) {
 		$.ajax({
-			url: "php/getLocation.php",
+			url: "php/getWeather.php",
 			type: 'POST',
 			dataType: 'json',
 			data: {

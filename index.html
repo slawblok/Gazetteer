@@ -21,6 +21,7 @@
 		<script src="vendors/leaflet-providers/js/leaflet-providers.js"></script>
 		<link href="vendors/leaflet-extra-markers/css/leaflet.extra-markers.min.css" rel="stylesheet">
 		<script src="vendors/leaflet-extra-markers/js/leaflet.extra-markers.min.js"></script>
+		<script src="vendors/jschart/chart.js" type="text/javascript"></script>
 		
 	</head>
 
@@ -66,11 +67,14 @@
 					<li class="list-inline-item">&copy; <a href="https://restcountries.eu">REST Countries</a></li>
 					<li class="list-inline-item">&copy; <a href="https://openexchangerates.org">Open Exchange Rates</a></li>
 					<li class="list-inline-item">&copy; <a href="https://calendarific.com">Calendarific</a></li>
+					<li class="list-inline-item">&copy; <a href="https://covid19api.com">Covid19Api</a></li>
 					<li class="list-inline-item">&copy; <a href="https://github.com/leaflet-extras/leaflet-providers">Leaflet Providers</a></li>
 					<li class="list-inline-item">&copy; <a href="https://github.com/coryasilva/Leaflet.ExtraMarkers">Leaflet ExtraMarkers</a></li>
 					<li class="list-inline-item">&copy; <a href="https://getbootstrap.com/">Bootstrap</a></li>
 					<li class="list-inline-item">&copy; <a href="https://icons.getbootstrap.com/">Bootstrap Icons</a></li>
 					<li class="list-inline-item">&copy; <a href="https://jquery.com/">JQuery</a></li>
+					<li class="list-inline-item">&copy; <a href="https://www.cssscript.com/small-line-chart-generator-javascript-canvas-jschart">Small Line Chart</a></li>
+					<li class="list-inline-item">&copy; <a href="https://www.w3schools.com/graphics/canvas_clock.asp">Analog clock</a></li>
 				</ul>
 
 			</div>
@@ -92,11 +96,14 @@
 							<li>&copy; <a href="https://restcountries.eu">REST Countries</a></li>
 							<li>&copy; <a href="https://openexchangerates.org">Open Exchange Rates</a></li>
 							<li>&copy; <a href="https://calendarific.com">Calendarific</a></li>
+							<li>&copy; <a href="https://covid19api.com">Covid19Api</a></li>
 							<li>&copy; <a href="https://github.com/leaflet-extras/leaflet-providers">Leaflet Providers</a></li>
 							<li>&copy; <a href="https://github.com/coryasilva/Leaflet.ExtraMarkers">Leaflet ExtraMarkers</a></li>
 							<li>&copy; <a href="https://getbootstrap.com/">Bootstrap</a></li>
 							<li>&copy; <a href="https://icons.getbootstrap.com/">Bootstrap Icons</a></li>
-							<li>&copy; <a href="https://jquery.com/">JQuery</a></li>						
+							<li>&copy; <a href="https://jquery.com/">JQuery</a></li>
+							<li>&copy; <a href="https://www.cssscript.com/small-line-chart-generator-javascript-canvas-jschart">Small Line Chart</a></li>
+							<li>&copy; <a href="https://www.w3schools.com/graphics/canvas_clock.asp">Analog clock</a></li>						
 						</ul>
 					</div>
 					<div class="modal-footer">
@@ -120,7 +127,7 @@
 							  <div class="col-sm">
 								<p><span id="ci_capitalInfo"></span><span class="ci_countryName"></span> (<span id="cs_countryCode"></span>).</p>
 							  </div>
-							  <div class="col-sm">
+							  <div class="col-sm text-center">
 								<img id="ci_flag" src="https://restcountries.eu/data/tgo.svg">
 							  </div>
 							</div>
@@ -129,8 +136,8 @@
 						<hr>
 						<div class="container">
 							<div class="row">
-							  <div class="col-sm">
-								<canvas  id="analogClock" width="200" height="200"></canvas>
+							  <div class="col-sm text-center">
+								<canvas id="analogClock" width="200" height="200"></canvas>
 							  </div>
 							  <div class="col-sm">
 								<p>The <span id="ci_timeZoneName"></span> (<span id="ci_timeZoneNameShort"></span>) time zone is used; thus local time is <span id="ci_time"></span></p>
@@ -154,6 +161,20 @@
 						<hr>
 						<p>People of <span class="ci_countryName"></span> celebrate <span id="ci_nh_number"></span> National holidays in <span id="ci_nh_year"></span></p>
 						<ul id="ci_nh"></ul>
+						<hr>
+						<h1>Coronavirus information</h1>
+						<p>Number of confirmed cases per day</p>
+						<canvas class="container-fluid" id="covid19_confirmed" height="300">
+							Canvas not supported!
+						</canvas>
+						<p>Number of recovered cases per day</p>
+						<canvas class="container-fluid" id="covid19_recovered" height="300">
+							Canvas not supported!
+						</canvas>
+						<p>Number of deaths per day</p>
+						<canvas class="container-fluid" id="covid19_deaths" height="300">
+							Canvas not supported!
+						</canvas>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

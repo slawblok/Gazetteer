@@ -1,11 +1,5 @@
 <?php
 
-    function console_log( $data ){
-        echo '<script>';
-        echo 'console.log('. json_encode( $data ) .')';
-        echo '</script>';
-    }
-
     $executionStartTime = microtime(true) / 1000;
 
     // global variables
