@@ -56,7 +56,7 @@
 
 		// build Covid-19 API URL
 		$url = $covid19BaseUrl;
-		$url .= 'dayone/country/';
+		$url .= 'total/dayone/country/';
 		$url .= $slug;
 		// request build Covid-19 API URL
 		$ch = curl_init();
@@ -69,15 +69,7 @@
 			// convert data to array
 			$output['covid19']['error'] = 'Failed to get covid-19 data';
 		} else {
-			$results = json_decode($response, TRUE);
-			// remove provinces
-			$data = array();
-			foreach ($results as $result) {
-				if ($result['Province'] === '') {
-					array_push($data, $result);
-				}
-			}
-			$output['covid19']['data'] = $data;
+			$data = json_decode($response, TRUE);
 			// take only last 30 days and calculate daily change
 			$end = count($data)-1;
 			$start = $end-30;
@@ -87,17 +79,17 @@
 			$deathsDaily = array();
 			for ($i = $start; $i <= $end; $i++) {
 				// prepare labels for x axis
-				$k = $i-$end;
-				if (($k % 10 == 0)) {
-					array_push($days, $k.' days');
+				$k = $end-$i;
+				if (($k % 15 == 0)) {
+					array_push($days, $k.' days ago');
 				} else {
 					array_push($days, '');
 				}
-				// calculate daily change of 'Confirmed' cases
+				// calculate daily change of confirmed cases
 				array_push($confirmedDaily, $data[$i]['Confirmed'] - $data[$i-1]['Confirmed']);
-				// calculate daily change of 'Recovered' cases
+				// calculate daily change of recovered cases
 				array_push($recoveredDaily, $data[$i]['Recovered'] - $data[$i-1]['Recovered']);
-				// calculate daily change of 'Deaths' cases
+				// calculate daily change of deaths cases
 				array_push($deathsDaily, $data[$i]['Deaths'] - $data[$i-1]['Deaths']);
 			}
 			// store data

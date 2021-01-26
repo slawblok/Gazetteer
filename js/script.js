@@ -126,18 +126,26 @@ function fittingWaitingDisable() {
 	$('#fitBtn > i').show();
 }
 
+function clearFlagLang(){
+	$('#ci_flag').hide();
+	$('#ci_language').text('');
+}
+
 // show country flag and language
 function showFlagLang(data) {
 	// load information to Bootstrap modal
 	$('#ci_language').text(data.restCountries.languages[0].name);
-	$('#ci_flag').attr('src', data.restCountries.flag);
+	$('#ci_flag').attr('src', data.restCountries.flag).show();
+}
+
+function clearExchangeRates() {
+	$('#ci_buyMajor').empty();
+	$('#ci_sellMajor').empty();
 }
 
 // show country currency exchange rates to few major currencies
 function showExchangeRates(data) {
 	var base = data.exchangeRates.base;
-	$('#ci_buyMajor').empty();
-	$('#ci_sellMajor').empty();
 	var symbol = $('.ci_currencySymbol').text();
 	symbol = symbol.substring(0, symbol.length/2);
 	for (var key in data.exchangeRates[base]){
@@ -146,6 +154,12 @@ function showExchangeRates(data) {
 		$('#ci_buyMajor').append($('<li></li>').text(infoBuy));
 		$('#ci_sellMajor').append($('<li></li>').text(infoSell));
 	}
+}
+
+function clearHolidays(){
+	$('#ci_nh_number').text('');
+	$('#ci_nh_year').text('');
+	$('#ci_nh').empty();
 }
 
 function monthName(number) {
@@ -196,7 +210,6 @@ function showHolidays(data) {
 	if (number>0) {
 		$('#ci_nh_year').text(data.calendarific[0].date.datetime.year);
 	}
-	$('#ci_nh').empty();
 	data.calendarific.forEach(function(holiday) {
 		var datetime = holiday.date.datetime;
 		var dateFormated = datetime.day + ' of ' + monthName(datetime.month-1);
@@ -205,9 +218,7 @@ function showHolidays(data) {
 	});
 }
 
-// show Covid-19 statistics
-function showCovid19(data) {
-
+function clearCovid19() {
 	var canvasConfirmed = document.getElementById("covid19_confirmed");
 	var canvasRecovered = document.getElementById("covid19_recovered");
 	var canvasDeaths = document.getElementById("covid19_deaths");
@@ -220,6 +231,29 @@ function showCovid19(data) {
 
 	context = canvasDeaths.getContext('2d');
 	context.clearRect(0, 0, canvasDeaths.width, canvasDeaths.height);
+
+	$('#covid19_confirmed_enable').hide();
+	$('#covid19_recovered_enable').hide();
+	$('#covid19_deaths_enable').hide();
+}
+
+function isArrayNoneZero(array) {
+	var result = false;
+	array.forEach(function (item) {
+		if (item != 0) {
+			result = true;
+		}
+	});
+	return result;
+
+}
+
+// show Covid-19 statistics
+function showCovid19(data) {
+
+	var canvasConfirmed = document.getElementById("covid19_confirmed");
+	var canvasRecovered = document.getElementById("covid19_recovered");
+	var canvasDeaths = document.getElementById("covid19_deaths");
 
 	var dataConfirmed = {
 		"xName": "Days",
@@ -257,17 +291,26 @@ function showCovid19(data) {
 		]
 	};
 	
-	chartify(canvasConfirmed, dataConfirmed, {
-		"dataColor": "blue"
-	});
+	if (isArrayNoneZero(data.covid19.confirmedDaily)) {
+		chartify(canvasConfirmed, dataConfirmed, {
+			"dataColor": "blue"
+		});
+		$('#covid19_confirmed_enable').show();
+	}
 
-	chartify(canvasRecovered, dataRecovered, {
-		"dataColor": "green"
-	});
+	if (isArrayNoneZero(data.covid19.recoveredDaily)) {
+		chartify(canvasRecovered, dataRecovered, {
+			"dataColor": "green"
+		});
+		$('#covid19_recovered_enable').show();
+	}
 
-	chartify(canvasDeaths, dataDeaths, {
-		"dataColor": "black"
-	});
+	if (isArrayNoneZero(data.covid19.deathsDaily)) {
+		chartify(canvasDeaths, dataDeaths, {
+			"dataColor": "black"
+		});
+		$('#covid19_deaths_enable').show();
+	}
 }
 
 // load detailed information about location to popup
@@ -280,8 +323,7 @@ function showDetails(data) {
 // ########################################################################
 
 function getCovid19(data) {
-	var date = new Date();
-	var year = date.getFullYear();
+	clearCovid19();
 	$.ajax({
 		url: "php/getCovid19.php",
 		type: 'POST',
@@ -300,6 +342,7 @@ function getCovid19(data) {
 }
 
 function getHolidays(data) {
+	clearHolidays();
 	var date = new Date();
 	var year = date.getFullYear();
 	$.ajax({
@@ -321,6 +364,7 @@ function getHolidays(data) {
 }
 
 function getExchangeRates(data) {
+	clearExchangeRates();
 	$.ajax({
 		url: "php/getExchangeRate.php",
 		type: 'POST',
@@ -339,6 +383,7 @@ function getExchangeRates(data) {
 }
 
 function getFlagLang(data) {
+	clearFlagLang();
 	$.ajax({
 		url: "php/getFlagLang.php",
 		type: 'POST',
@@ -354,6 +399,14 @@ function getFlagLang(data) {
 			console.log(jqXHR);
 		}
 	});
+}
+
+function getCountryInformation(data){
+	showCoreInfo(data);
+	getFlagLang(data);
+	getExchangeRates(data);
+	getHolidays(data);
+	getCovid19(data);
 }
 
 // obtain country core informations based on name
@@ -373,11 +426,7 @@ function getCountryByName() {
 		},		
 		success: function(result) {
 			fittingWaitingDisable();
-			showCoreInfo(result);
-			getFlagLang(result);
-			getExchangeRates(result);
-			getHolidays(result);
-			getCovid19(result);
+			getCountryInformation(result);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			fittingWaitingDisable();
@@ -411,11 +460,7 @@ function getCountryByPosition() {
 				localisationWaitingDisable();
 				// select country on drop down list and update the map
 				$('#countryList').val(result.countryBorders.properties.iso_a2);
-				showCoreInfo(result);
-				getFlagLang(result);
-				getExchangeRates(result);
-				getHolidays(result);
-				getCovid19(result);
+				getCountryInformation(result);
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				localisationWaitingDisable();
