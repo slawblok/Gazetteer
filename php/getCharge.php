@@ -23,7 +23,7 @@
     switch ($_REQUEST['type']){
         case 'coordinates': {
             $url .= '&latitude='.$_REQUEST['latitude'].'&longitude='.$_REQUEST['longitude'];
-            $url .= '&maxresults=10';
+            $url .= '&maxresults=20';
         } break;
         case 'country': {
             $url .= '&countrycode='.$_REQUEST['countryId']['iso_a2'];

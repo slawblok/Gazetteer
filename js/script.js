@@ -2,7 +2,11 @@ import {initClockAt, updateClock} from '../vendors/analogclock/analogclock.js';
 
 // global variables
 var gtmap;
-var countryBorderAndCapitol;
+var borderCapitolLayer;
+var earthQuakeLayer;
+var wikiLayer;
+var chargeLayer;
+var webcamsLayer;
 var timeZoneOffset = 0;
 var countryId;
 
@@ -34,8 +38,16 @@ function setupMap() {
 	});
 	gtmap.setView([51.505, -0.09], 13); // default London
 	gtmap.addLayer(L.tileLayer.provider('OpenStreetMap.Mapnik'));
-	countryBorderAndCapitol = L.featureGroup();
-	gtmap.addLayer(countryBorderAndCapitol);
+	borderCapitolLayer = L.featureGroup();
+	earthQuakeLayer = L.featureGroup();
+	wikiLayer = L.featureGroup();
+	chargeLayer = L.featureGroup();
+	webcamsLayer = L.featureGroup();
+	gtmap.addLayer(borderCapitolLayer);
+	gtmap.addLayer(earthQuakeLayer);
+	gtmap.addLayer(wikiLayer);
+	gtmap.addLayer(chargeLayer);
+	gtmap.addLayer(webcamsLayer);
 }
 
 // load country core information
@@ -47,7 +59,7 @@ function showCoreInfo(data) {
 	countryId = data.countryId;
 
 	// update map - country borders
-	countryBorderAndCapitol.clearLayers();
+	borderCapitolLayer.clearLayers();
 	L.geoJSON(data.countryBorders, {
 		style: function (feature) {
 			return {
@@ -57,8 +69,8 @@ function showCoreInfo(data) {
 			};
 		}
 	})
-	.addTo(countryBorderAndCapitol);
-	gtmap.flyToBounds(countryBorderAndCapitol.getBounds());
+	.addTo(borderCapitolLayer);
+	gtmap.flyToBounds(borderCapitolLayer.getBounds());
 	
 	// capitol icon/marker, which can show Bootstrap modal
 	var capitolIcon = L.ExtraMarkers.icon({
@@ -71,7 +83,7 @@ function showCoreInfo(data) {
 		icon: capitolIcon
 	}).on('click', function() {
 		new bootstrap.Modal(document.getElementById('countryModal')).show();
-	}).addTo(countryBorderAndCapitol);
+	}).addTo(borderCapitolLayer);
 
 	// load information to Bootstrap modal
 	$('.ci_countryName').text(data.countryId.countryName);
@@ -98,7 +110,7 @@ function showCoreInfo(data) {
 
 // fit map to current country boundary
 $('#fitBtn').click(function() {
-	gtmap.flyToBounds(countryBorderAndCapitol.getBounds());
+	gtmap.flyToBounds(borderCapitolLayer.getBounds());
 });
 
 function localisationWaitingEnable() {
@@ -348,35 +360,84 @@ function showSolar(data) {
 }
 
 function clearEarthQuakes() {
-	
+	earthQuakeLayer.clearLayers();
 }
 
 function showEarthQuakes(data) {
-	console.log(data);
+	
 }
 
 function clearWiki() {
-	
+	wikiLayer.clearLayers();
 }
 
 function showWiki(data) {
-	
+	// try https://github.com/MatthewBarker/leaflet-wikipedia
+	var wikiIcon = L.ExtraMarkers.icon({
+		icon: 'bi-info-circle',
+		markerColor: 'yellow',
+		shape: 'circle',
+		prefix: 'bi',
+	  });
+	data.wikiRaw.geonames.forEach(function(entry) {
+		L.marker(L.latLng(entry.lat, entry.lng), {
+			icon: wikiIcon
+		}).bindPopup('<h5>'+entry.title+'</h5><p>'+entry.summary+'</p><br><a href=https://'+entry.wikipediaUrl+' target="_blank">Click here to go to Wikipedia.org</a>')
+		.addTo(wikiLayer);
+	});
 }
 
 function clearCharge() {
-	
+	chargeLayer.clearLayers();
 }
 
 function showCharge(data) {
+
+	var chargerIcon = L.ExtraMarkers.icon({
+		icon: 'bi-battery-charging',
+		markerColor: 'blue',
+		shape: 'circle',
+		prefix: 'bi',
+	  });
+
+	data.chargeRaw.forEach(function(station) {
+		L.marker(L.latLng(station.AddressInfo.Latitude, station.AddressInfo.Longitude), {
+			icon: chargerIcon
+		}).bindPopup('<h5>Charge station</h5><p>Usage cost: '+station.UsageCost+'<br>Connections: '+station.Connections.length+'<br>Address: '+station.AddressInfo.AddressLine1+', '+station.AddressInfo.Town+', '+station.AddressInfo.Postcode+', '+'</p>')
+		.addTo(chargeLayer);
+	});
 	
 }
 
 function clearWebCams() {
-	
+	webcamsLayer.clearLayers();
 }
 
 function showWebCams(data) {
-	
+
+	var webcamsIcon = L.ExtraMarkers.icon({
+		icon: 'bi-camera-video',
+		markerColor: '',
+		shape: 'violet',
+		prefix: 'bi',
+	  });
+
+	data.webCamsRaw.result.webcams.forEach(function(camera) {
+		var popupContent;
+		if (camera.player.live.available === true) {
+			popupContent = '<h5>Web Camera</h5><a href='+camera.player.live.embed+' target="_blank"><img src='+camera.image.current.preview+' class="img-fluid"></a><p>Live view available';
+		} else {
+			popupContent = '<h5>Web Camera</h5><img src='+camera.image.current.preview+' class="img-fluid">';
+		}
+		
+		var popup = L.popup({maxWidth: 500, minWidth: 300}).setContent(popupContent);
+
+		L.marker(L.latLng(camera.location.latitude, camera.location.longitude), {
+			icon: webcamsIcon
+		}).bindPopup(popup)
+		.addTo(webcamsLayer);
+	});
+
 }
 
 // ########################################################################
@@ -528,7 +589,7 @@ function getEarthQuakesByPosition(latlng) {
 
 function getEarthQuakesByCountry(countryId) {
 	clearEarthQuakes();
-	var bounds = countryBorderAndCapitol.getBounds();
+	var bounds = borderCapitolLayer.getBounds();
 	$.ajax({
 		url: "php/getEarthQuakes.php",
 		type: 'POST',

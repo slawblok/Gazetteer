@@ -20,15 +20,16 @@
     switch ($_REQUEST['type']){
         case 'coordinates': {
             $url .= '/nearby='.$_REQUEST['latitude'].','.$_REQUEST['longitude'];
-            $url .= ',50';   // within 50km radius
+            $url .= ',20';   // within 20km radius
         } break;
         case 'country': {
             $url .= '/country='.$_REQUEST['countryId']['iso_a2'];
         }
     }
+    $url .= '/limit=50';    // max 50 in free plan
     $url .= '?key='.$apiKeys->webcams->key;
     $url .= '&show=webcams:location,image,player';
-
+    
     // request Web Cams
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
