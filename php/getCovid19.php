@@ -6,15 +6,6 @@
     $apiKeys = json_decode(file_get_contents("APIKeys.json"));
 	$output = NULL;
 
-	// helper function to save copy values
-	function copy_if_exist($key, $array) {
-		if (array_key_exists($key, $array)) {
-			return $array[$key];
-		} else {
-			return NULL;
-		}
-    }
-    
     // ########################################################################
 	// #                      https://covid19api.com/                         # 
 	// #                         COVID-19 statistic                           #

@@ -23,7 +23,7 @@
     $url .= 'api_key='.$apiKeys->calendarific->key;
     $url .= '&country='.$_REQUEST['countryId']['iso_a2'];
     $url .= '&year='.$_REQUEST['year'];
-	// request Open Exchange Rate
+	// request Calendarific
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);

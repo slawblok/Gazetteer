@@ -5,22 +5,20 @@
     // global variables
     $apiKeys = json_decode(file_get_contents("APIKeys.json"));
 	$output = NULL;
-
+    
     // ########################################################################
-	// #                     https://openweathermap.org                       # 
-	// #                 get weather for given coordinates                    #
+	// #          https://www.iqair.com/air-pollution-data-api                # 
+	// #        get air quality and polutions for given coordinates           #
 	// ########################################################################
 
-    $openWatherMapBaseUrl = 'api.openweathermap.org/data/2.5/onecall?';
+    $airvisualBaseUrl = 'https://api.airvisual.com/v2/';
     
-	// build OpenWeatherMap API URL
-	$url = $openWatherMapBaseUrl;
+	// build IQAir API URL
+    $url = $airvisualBaseUrl;
+    $url .= 'nearest_city?';
 	$url .= '&lat='.$_REQUEST['latitude'].'&lon='.$_REQUEST['longitude'];
-	$url .= '&appid='.$apiKeys->openweathermap->key;
-	$url .= '&exclude=minutely,hourly';	// limit amount of information
-    $url .= '&units=standard';
-    $url .= '&lang=en';
-	// request OpenWeatherMap
+	$url .= '&key='.$apiKeys->airvisual->key;
+	// request IQAir
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
@@ -29,11 +27,11 @@
 	curl_close($ch);
 	// convert data to array
 	if ($response === FALSE) {
-		$output['weather']['error'] = 'Failed to get weather information';
+		$output['airQuality']['error'] = 'Failed to get air quality information';
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-		$output['weatherRaw'] = $results;
+		$output['airQualityRaw'] = $results;
 	}
 
     $output['status']['code'] = "200";

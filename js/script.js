@@ -4,6 +4,7 @@ import {initClockAt, updateClock} from '../vendors/analogclock/analogclock.js';
 var gtmap;
 var countryBorderAndCapitol;
 var timeZoneOffset = 0;
+var countryId;
 
 // ########################################################################
 // #                          display section                             #
@@ -42,6 +43,8 @@ function showCoreInfo(data) {
 
 	// save time zone offset in global variable to be used by clock showing local time
 	timeZoneOffset = data.openCage.timezone.offset_sec;
+
+	countryId = data.countryId;
 
 	// update map - country borders
 	countryBorderAndCapitol.clearLayers();
@@ -245,7 +248,6 @@ function isArrayNoneZero(array) {
 		}
 	});
 	return result;
-
 }
 
 // show Covid-19 statistics
@@ -313,23 +315,334 @@ function showCovid19(data) {
 	}
 }
 
-// load detailed information about location to popup
-function showDetails(data) {
+function clearNews() {
+	
+}
 
+function showNews(data) {
+	
+}
+
+function clearWeather() {
+
+}
+
+function showWeather(data) {
+
+}
+
+function clearAirQuality() {
+
+}
+
+function showAirQuality(data) {
+
+}
+
+function clearSolar() {
+	
+}
+
+function showSolar(data) {
+	
+}
+
+function clearEarthQuakes() {
+	
+}
+
+function showEarthQuakes(data) {
+	console.log(data);
+}
+
+function clearWiki() {
+	
+}
+
+function showWiki(data) {
+	
+}
+
+function clearCharge() {
+	
+}
+
+function showCharge(data) {
+	
+}
+
+function clearWebCams() {
+	
+}
+
+function showWebCams(data) {
+	
 }
 
 // ########################################################################
 // #                 obtaining information section                        #
 // ########################################################################
 
-function getCovid19(data) {
+$('#aboutBtn').on('click', function(){
+	new bootstrap.Modal(document.getElementById('contributionsModal')).show();
+});
+
+$('#clearBtn').on('click', function(){
+	clearEarthQuakes();
+	clearWiki();
+	clearCharge();
+	clearWebCams();
+});
+
+function getWebCamsByPosition(latlng) {
+	clearWebCams();
+	$.ajax({
+		url: "php/getWebCams.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			type: 'coordinates',
+			latitude: latlng.lat,
+			longitude: latlng.lng,
+		},		
+		success: function(result) {
+			showWebCams(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getWebCamsByCountry(countryId) {
+	clearWebCams();
+	$.ajax({
+		url: "php/getWebCams.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			type: 'country',
+			countryId: countryId,
+		},		
+		success: function(result) {
+			showWebCams(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+$('#webCamsBtn').on('click', function(){
+	getWebCamsByCountry(countryId);
+});
+
+function getChargeByPosition(latlng) {
+	clearCharge();
+	$.ajax({
+		url: "php/getCharge.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			type: 'coordinates',
+			latitude: latlng.lat,
+			longitude: latlng.lng,
+		},		
+		success: function(result) {
+			showCharge(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getChargeByCountry(countryId) {
+	clearCharge();
+	$.ajax({
+		url: "php/getCharge.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			type: 'country',
+			countryId: countryId,
+		},		
+		success: function(result) {
+			showCharge(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+$('#chargeBtn').on('click', function(){
+	getChargeByCountry(countryId);
+});
+
+function getWiki(latlng) {
+	clearWiki();
+	$.ajax({
+		url: "php/getWiki.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			type: 'coordinates',
+			latitude: latlng.lat,
+			longitude: latlng.lng,
+		},		
+		success: function(result) {
+			showWiki(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getEarthQuakesByPosition(latlng) {
+	clearEarthQuakes();
+	$.ajax({
+		url: "php/getEarthQuakes.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			type: 'coordinates',
+			latitude: latlng.lat,
+			longitude: latlng.lng,
+		},		
+		success: function(result) {
+			showEarthQuakes(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getEarthQuakesByCountry(countryId) {
+	clearEarthQuakes();
+	var bounds = countryBorderAndCapitol.getBounds();
+	$.ajax({
+		url: "php/getEarthQuakes.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			type: 'country',
+			countryId: countryId,
+			north: bounds.getNorth(),
+			south: bounds.getSouth(),
+			east: bounds.getEast(),
+			west: bounds.getWest(),
+		},		
+		success: function(result) {
+			showEarthQuakes(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+$('#earthQuakesBtn').on('click', function(){
+	getEarthQuakesByCountry(countryId);
+});
+
+function getSolar(latlng) {
+	clearSolar();
+	$.ajax({
+		url: "php/getSolar1.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			latitude: latlng.lat,
+			longitude: latlng.lng,
+		},		
+		success: function(result) {
+			showSolar(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getAirQuality(latlng) {
+	clearAirQuality();
+	$.ajax({
+		url: "php/getAirQuality.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			latitude: latlng.lat,
+			longitude: latlng.lng,
+		},		
+		success: function(result) {
+			showAirQuality(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getWeather(latlng) {
+	clearWeather();
+	$.ajax({
+		url: "php/getWeather.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			latitude: latlng.lat,
+			longitude: latlng.lng,
+		},		
+		success: function(result) {
+			showWeather(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getNews(countryId) {
+	clearNews();
+	$.ajax({
+		url: "php/getNews.php",
+		type: 'POST',
+		dataType: 'json',
+		data: {
+			type: 'country',
+			countryId: countryId,
+		},		
+		success: function(result) {
+			showNews(result);
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.log("request failed");
+			console.log(jqXHR);
+		}
+	});
+}
+
+function getCovid19(countryId) {
 	clearCovid19();
 	$.ajax({
 		url: "php/getCovid19.php",
 		type: 'POST',
 		dataType: 'json',
 		data: {
-			countryId: data.countryId,
+			countryId: countryId,
 		},		
 		success: function(result) {
 			showCovid19(result);
@@ -341,7 +654,7 @@ function getCovid19(data) {
 	});
 }
 
-function getHolidays(data) {
+function getHolidays(countryId) {
 	clearHolidays();
 	var date = new Date();
 	var year = date.getFullYear();
@@ -350,7 +663,7 @@ function getHolidays(data) {
 		type: 'POST',
 		dataType: 'json',
 		data: {
-			countryId: data.countryId,
+			countryId: countryId,
 			year: year,
 		},		
 		success: function(result) {
@@ -363,14 +676,14 @@ function getHolidays(data) {
 	});
 }
 
-function getExchangeRates(data) {
+function getExchangeRates(currency) {
 	clearExchangeRates();
 	$.ajax({
 		url: "php/getExchangeRate.php",
 		type: 'POST',
 		dataType: 'json',
 		data: {
-			currency: data.openCage.currency.iso_code,
+			currency: currency,
 		},		
 		success: function(result) {
 			showExchangeRates(result);
@@ -382,14 +695,14 @@ function getExchangeRates(data) {
 	});
 }
 
-function getFlagLang(data) {
+function getFlagLang(countryId) {
 	clearFlagLang();
 	$.ajax({
 		url: "php/getFlagLang.php",
 		type: 'POST',
 		dataType: 'json',
 		data: {
-			countryId: data.countryId,
+			countryId: countryId,
 		},		
 		success: function(result) {
 			showFlagLang(result);
@@ -403,10 +716,11 @@ function getFlagLang(data) {
 
 function getCountryInformation(data){
 	showCoreInfo(data);
-	getFlagLang(data);
-	getExchangeRates(data);
-	getHolidays(data);
-	getCovid19(data);
+	getFlagLang(data.countryId);
+	getExchangeRates(data.openCage.currency.iso_code);
+	getHolidays(data.countryId);
+	getCovid19(data.countryId);
+	getNews(data.countryId);
 }
 
 // obtain country core informations based on name
@@ -435,6 +749,8 @@ function getCountryByName() {
 		}
 	});
 }
+
+$('#countryList').on('change', getCountryByName);
 
 // obtain country core informations based on user's position
 function getCountryByPosition() {
@@ -476,8 +792,6 @@ function getCountryByPosition() {
 	window.navigator.geolocation.getCurrentPosition(success, error, options);
 }
 
-$('#countryList').on('change', getCountryByName);
-
 $('#locateMeBtn').on('click', getCountryByPosition);
 
 $(window).on('load', function () {
@@ -487,22 +801,13 @@ $(window).on('load', function () {
 
 	// get information about specific location
 	gtmap.on('dblclick', function(event) {
-		$.ajax({
-			url: "php/getWeather.php",
-			type: 'POST',
-			dataType: 'json',
-			data: {
-				latitude: event.latlng.lat,
-				longitude: event.latlng.lng,
-			},		
-			success: function(result) {
-				showDetails(result);
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.log("request failed");
-				console.log(jqXHR);
-			}
-		});
+		getWeather(event.latlng);
+		getAirQuality(event.latlng);
+		getSolar(event.latlng);
+		getEarthQuakesByPosition(event.latlng);
+		getWiki(event.latlng);
+		getChargeByPosition(event.latlng);
+		getWebCamsByPosition(event.latlng);
 	});
 
 	// get country list and populate select options

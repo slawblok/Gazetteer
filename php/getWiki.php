@@ -5,22 +5,25 @@
     // global variables
     $apiKeys = json_decode(file_get_contents("APIKeys.json"));
 	$output = NULL;
-
-    // ########################################################################
-	// #                     https://openweathermap.org                       # 
-	// #                 get weather for given coordinates                    #
-	// ########################################################################
-
-    $openWatherMapBaseUrl = 'api.openweathermap.org/data/2.5/onecall?';
     
-	// build OpenWeatherMap API URL
-	$url = $openWatherMapBaseUrl;
-	$url .= '&lat='.$_REQUEST['latitude'].'&lon='.$_REQUEST['longitude'];
-	$url .= '&appid='.$apiKeys->openweathermap->key;
-	$url .= '&exclude=minutely,hourly';	// limit amount of information
-    $url .= '&units=standard';
-    $url .= '&lang=en';
-	// request OpenWeatherMap
+    // ########################################################################
+	// #                      https://www.geonames.org/                       # 
+	// #                          wikipedia links                             #
+	// ########################################################################
+	// There is 30,000 credits/day and 1000credits/hour in free plan.
+
+	$geoNamesBaseUrl = 'http://api.geonames.org/';
+
+	// build GeoNames API URL
+	$url = $geoNamesBaseUrl;
+	$url .= 'findNearbyWikipediaJSON?';
+    $url .= '&username='.$apiKeys->geonames->username;
+    $url .= '&maxRows=50';  // max 500 in free service
+    $url .= '&lat='.$_REQUEST['latitude'];
+    $url .= '&lng='.$_REQUEST['longitude'];
+    $url .= '&radius=20';   // max 20km in free service
+    
+	// request GeoNames
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
@@ -29,11 +32,11 @@
 	curl_close($ch);
 	// convert data to array
 	if ($response === FALSE) {
-		$output['weather']['error'] = 'Failed to get weather information';
+		$output['wiki']['error'] = 'Failed to get information from GeoNames';
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-		$output['weatherRaw'] = $results;
+		$output['wikiRaw'] = $results;
 	}
 
     $output['status']['code'] = "200";

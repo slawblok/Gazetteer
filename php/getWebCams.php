@@ -5,22 +5,31 @@
     // global variables
     $apiKeys = json_decode(file_get_contents("APIKeys.json"));
 	$output = NULL;
-
+    
     // ########################################################################
-	// #                     https://openweathermap.org                       # 
-	// #                 get weather for given coordinates                    #
+	// #                        https://api.windy.com                         # 
+	// #                              get web cams                            #
 	// ########################################################################
 
-    $openWatherMapBaseUrl = 'api.openweathermap.org/data/2.5/onecall?';
+    $webCamsBaseUrl = 'https://api.windy.com/api/webcams/v2';
     
-	// build OpenWeatherMap API URL
-	$url = $openWatherMapBaseUrl;
-	$url .= '&lat='.$_REQUEST['latitude'].'&lon='.$_REQUEST['longitude'];
-	$url .= '&appid='.$apiKeys->openweathermap->key;
-	$url .= '&exclude=minutely,hourly';	// limit amount of information
-    $url .= '&units=standard';
-    $url .= '&lang=en';
-	// request OpenWeatherMap
+	// build Web Cams API URL
+    $url = $webCamsBaseUrl;
+    $url .= '/list';
+    
+    switch ($_REQUEST['type']){
+        case 'coordinates': {
+            $url .= '/nearby='.$_REQUEST['latitude'].','.$_REQUEST['longitude'];
+            $url .= ',50';   // within 50km radius
+        } break;
+        case 'country': {
+            $url .= '/country='.$_REQUEST['countryId']['iso_a2'];
+        }
+    }
+    $url .= '?key='.$apiKeys->webcams->key;
+    $url .= '&show=webcams:location,image,player';
+
+    // request Web Cams
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
@@ -29,12 +38,12 @@
 	curl_close($ch);
 	// convert data to array
 	if ($response === FALSE) {
-		$output['weather']['error'] = 'Failed to get weather information';
+		$output['webCams']['error'] = 'Failed to get web cams information';
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-		$output['weatherRaw'] = $results;
-	}
+        $output['webCamsRaw'] = $results;
+    }
 
     $output['status']['code'] = "200";
     $output['status']['name'] = "ok";
