@@ -4,9 +4,12 @@ import {initClockAt, updateClock} from '../vendors/analogclock/analogclock.js';
 var gtmap;
 var borderCapitolLayer;
 var earthQuakeLayer;
+var earthQuakeCluster;
 var wikiLayer;
 var chargeLayer;
+var chargeCluster;
 var webcamsLayer;
+var webcamsCluster;
 var timeZoneOffset = 0;
 var countryId;
 
@@ -40,14 +43,20 @@ function setupMap() {
 	gtmap.addLayer(L.tileLayer.provider('OpenStreetMap.Mapnik'));
 	borderCapitolLayer = L.featureGroup();
 	earthQuakeLayer = L.featureGroup();
+	earthQuakeCluster = L.markerClusterGroup();
 	wikiLayer = L.featureGroup();
 	chargeLayer = L.featureGroup();
+	chargeCluster = L.markerClusterGroup();
 	webcamsLayer = L.featureGroup();
+	webcamsCluster = L.markerClusterGroup();
 	gtmap.addLayer(borderCapitolLayer);
 	gtmap.addLayer(earthQuakeLayer);
+	gtmap.addLayer(earthQuakeCluster);
 	gtmap.addLayer(wikiLayer);
 	gtmap.addLayer(chargeLayer);
+	gtmap.addLayer(chargeCluster);
 	gtmap.addLayer(webcamsLayer);
+	gtmap.addLayer(webcamsCluster);
 }
 
 // load country core information
@@ -361,10 +370,29 @@ function showSolar(data) {
 
 function clearEarthQuakes() {
 	earthQuakeLayer.clearLayers();
+	earthQuakeCluster.clearLayers();
 }
 
-function showEarthQuakes(data) {
-	
+function showEarthQuakes(data, type) {
+	var eqIcon = L.ExtraMarkers.icon({
+		icon: 'bi-bullseye',
+		markerColor: 'red',
+		shape: 'circle',
+		prefix: 'bi',
+	  });
+	data.earthQuakesRaw.earthquakes.forEach(function(eq) {
+		var marker = L.marker(L.latLng(eq.lat, eq.lng), {
+			icon: eqIcon
+		}).bindPopup('<h5>Earthquake</h5><p>Magnitude: '+eq.magnitude+'<br>Date: '+eq.datetime+'</p>');
+		switch(type){
+			case 'noCluster': {
+				marker.addTo(earthQuakeLayer);
+			} break;
+			case 'Clustered': {
+				marker.addTo(earthQuakeCluster);
+			} break;
+		}
+	})
 }
 
 function clearWiki() {
@@ -389,9 +417,10 @@ function showWiki(data) {
 
 function clearCharge() {
 	chargeLayer.clearLayers();
+	chargeCluster.clearLayers();
 }
 
-function showCharge(data) {
+function showCharge(data, type) {
 
 	var chargerIcon = L.ExtraMarkers.icon({
 		icon: 'bi-battery-charging',
@@ -401,24 +430,32 @@ function showCharge(data) {
 	  });
 
 	data.chargeRaw.forEach(function(station) {
-		L.marker(L.latLng(station.AddressInfo.Latitude, station.AddressInfo.Longitude), {
+		var marker = L.marker(L.latLng(station.AddressInfo.Latitude, station.AddressInfo.Longitude), {
 			icon: chargerIcon
-		}).bindPopup('<h5>Charge station</h5><p>Usage cost: '+station.UsageCost+'<br>Connections: '+station.Connections.length+'<br>Address: '+station.AddressInfo.AddressLine1+', '+station.AddressInfo.Town+', '+station.AddressInfo.Postcode+', '+'</p>')
-		.addTo(chargeLayer);
+		}).bindPopup('<h5>Charge station</h5><p>Usage cost: '+station.UsageCost+'<br>Connections: '+station.Connections.length+'<br>Address: '+station.AddressInfo.AddressLine1+', '+station.AddressInfo.Town+', '+station.AddressInfo.Postcode+', '+'</p>');
+		switch(type){
+			case 'noCluster': {
+				marker.addTo(chargeLayer);
+			} break;
+			case 'Clustered': {
+				marker.addTo(chargeCluster);
+			} break;
+		}
 	});
 	
 }
 
 function clearWebCams() {
 	webcamsLayer.clearLayers();
+	webcamsCluster.clearLayers();
 }
 
-function showWebCams(data) {
+function showWebCams(data, type) {
 
 	var webcamsIcon = L.ExtraMarkers.icon({
 		icon: 'bi-camera-video',
-		markerColor: '',
-		shape: 'violet',
+		markerColor: 'purple',
+		shape: 'circle',
 		prefix: 'bi',
 	  });
 
@@ -429,15 +466,34 @@ function showWebCams(data) {
 		} else {
 			popupContent = '<h5>Web Camera</h5><img src='+camera.image.current.preview+' class="img-fluid">';
 		}
-		
 		var popup = L.popup({maxWidth: 500, minWidth: 300}).setContent(popupContent);
-
-		L.marker(L.latLng(camera.location.latitude, camera.location.longitude), {
+		var marker = L.marker(L.latLng(camera.location.latitude, camera.location.longitude), {
 			icon: webcamsIcon
-		}).bindPopup(popup)
-		.addTo(webcamsLayer);
+		}).bindPopup(popup);
+		switch(type){
+			case 'noCluster': {
+				marker.addTo(webcamsLayer);
+			} break;
+			case 'Clustered': {
+				marker.addTo(webcamsCluster);
+			} break;
+		}
 	});
 
+}
+
+function clearAllClusters(){
+	// this help to avoid multiple clusters overlay the map
+	webcamsCluster.clearLayers();
+	chargeCluster.clearLayers();
+	earthQuakeCluster.clearLayers();
+}
+
+function clearAllLayers(){
+	webcamsLayer.clearLayers();
+	chargeLayer.clearLayers();
+	wikiLayer.clearLayers()
+	earthQuakeLayer.clearLayers();
 }
 
 // ########################################################################
@@ -449,10 +505,8 @@ $('#aboutBtn').on('click', function(){
 });
 
 $('#clearBtn').on('click', function(){
-	clearEarthQuakes();
-	clearWiki();
-	clearCharge();
-	clearWebCams();
+	clearAllLayers();
+	clearAllClusters();
 });
 
 function getWebCamsByPosition(latlng) {
@@ -467,7 +521,7 @@ function getWebCamsByPosition(latlng) {
 			longitude: latlng.lng,
 		},		
 		success: function(result) {
-			showWebCams(result);
+			showWebCams(result, 'noCluster');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			console.log("request failed");
@@ -487,7 +541,7 @@ function getWebCamsByCountry(countryId) {
 			countryId: countryId,
 		},		
 		success: function(result) {
-			showWebCams(result);
+			showWebCams(result, 'Clustered');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			console.log("request failed");
@@ -497,6 +551,7 @@ function getWebCamsByCountry(countryId) {
 }
 
 $('#webCamsBtn').on('click', function(){
+	clearAllClusters();
 	getWebCamsByCountry(countryId);
 });
 
@@ -512,7 +567,7 @@ function getChargeByPosition(latlng) {
 			longitude: latlng.lng,
 		},		
 		success: function(result) {
-			showCharge(result);
+			showCharge(result, 'noCluster');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			console.log("request failed");
@@ -532,7 +587,7 @@ function getChargeByCountry(countryId) {
 			countryId: countryId,
 		},		
 		success: function(result) {
-			showCharge(result);
+			showCharge(result, 'Clustered');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			console.log("request failed");
@@ -542,6 +597,7 @@ function getChargeByCountry(countryId) {
 }
 
 $('#chargeBtn').on('click', function(){
+	clearAllClusters();
 	getChargeByCountry(countryId);
 });
 
@@ -578,7 +634,7 @@ function getEarthQuakesByPosition(latlng) {
 			longitude: latlng.lng,
 		},		
 		success: function(result) {
-			showEarthQuakes(result);
+			showEarthQuakes(result, 'noCluster');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			console.log("request failed");
@@ -603,7 +659,7 @@ function getEarthQuakesByCountry(countryId) {
 			west: bounds.getWest(),
 		},		
 		success: function(result) {
-			showEarthQuakes(result);
+			showEarthQuakes(result, 'Clustered');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			console.log("request failed");
@@ -613,6 +669,7 @@ function getEarthQuakesByCountry(countryId) {
 }
 
 $('#earthQuakesBtn').on('click', function(){
+	clearAllClusters();
 	getEarthQuakesByCountry(countryId);
 });
 
