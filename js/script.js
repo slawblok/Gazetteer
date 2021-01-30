@@ -10,8 +10,12 @@ var chargeLayer;
 var chargeCluster;
 var webcamsLayer;
 var webcamsCluster;
+var localLayer;
 var timeZoneOffset = 0;
 var countryId;
+var earthQuakesBtn;
+var chargeBtn;
+var webCamsBtn;
 
 // ########################################################################
 // #                          display section                             #
@@ -40,7 +44,11 @@ function setupMap() {
 		wheelDebounceTime: 300
 	});
 	gtmap.setView([51.505, -0.09], 13); // default London
+	
+	// load tiles from OSM
 	gtmap.addLayer(L.tileLayer.provider('OpenStreetMap.Mapnik'));
+	
+	// prepare various layers to presents additional informations
 	borderCapitolLayer = L.featureGroup();
 	earthQuakeLayer = L.featureGroup();
 	earthQuakeCluster = L.markerClusterGroup();
@@ -49,6 +57,7 @@ function setupMap() {
 	chargeCluster = L.markerClusterGroup();
 	webcamsLayer = L.featureGroup();
 	webcamsCluster = L.markerClusterGroup();
+	localLayer = L.featureGroup();
 	gtmap.addLayer(borderCapitolLayer);
 	gtmap.addLayer(earthQuakeLayer);
 	gtmap.addLayer(earthQuakeCluster);
@@ -57,6 +66,73 @@ function setupMap() {
 	gtmap.addLayer(chargeCluster);
 	gtmap.addLayer(webcamsLayer);
 	gtmap.addLayer(webcamsCluster);
+	gtmap.addLayer(localLayer);
+
+	// about, info button
+	L.easyButton('bi-info-circle', function(btn, map){
+		new bootstrap.Modal(document.getElementById('contributionsModal')).show();
+	}).addTo(gtmap);
+
+	// button to remove all markers from map 
+	L.easyButton('bi-x-circle', function(btn, map){
+		clearAllLayers();
+		clearAllClusters();
+	}).addTo(gtmap);
+
+	// button to show all earth quakes in the country
+	earthQuakesBtn = L.easyButton({
+		states: [{
+				stateName: 'ready',
+				icon:      'bi-bullseye',
+				title:     'Show all earth quakes in selected country',
+				onClick: function(btn, map) {
+					btn.state('searching');
+					clearAllClusters();
+					getEarthQuakesByCountry(countryId);
+				}
+			}, {
+				stateName: 'searching',
+				icon:      '<span class="spinner-border spinner-border-sm" role="status"></span>',
+				title:     'searching for earth quakes ...',
+		}]
+	}).addTo(gtmap);
+
+	// button to show all webcam in the country
+	webCamsBtn = L.easyButton({
+		states: [{
+				stateName: 'ready',
+				icon:      'bi-camera-video',
+				title:     'Show all WebCameras in selected country',
+				onClick: function(btn, map) {
+					btn.state('searching');
+					clearAllClusters();
+					getWebCamsByCountry(countryId);
+				}
+			}, {
+				stateName: 'searching',
+				icon:      '<span class="spinner-border spinner-border-sm" role="status"></span>',
+				title:     'searching for WebCameras ...',
+		}]
+	}).addTo(gtmap);
+
+	// button to show all car chargers in the country
+	chargeBtn = L.easyButton({
+		states: [{
+				stateName: 'ready',
+				icon:      'bi-battery-charging',
+				title:     'Show all car chargers in selected country',
+				onClick: function(btn, map) {
+					btn.state('searching');
+					clearAllClusters();
+					getChargeByCountry(countryId);
+				}
+			}, {
+				stateName: 'searching',
+				icon:      '<span class="spinner-border spinner-border-sm" role="status"></span>',
+				title:     'searching for car chargers ...',
+		}]
+	}).addTo(gtmap);
+
 }
 
 // load country core information
@@ -345,27 +421,46 @@ function showNews(data) {
 }
 
 function clearWeather() {
-
+	$('#localWeather').html('');
 }
 
 function showWeather(data) {
-
+	/*if ($('#localWeather').length) {
+		$('#localWeather').html('<p>weather loaded<p><hr>');
+	} else {
+		console.log('weather element does not exits.');
+	}*/
+	console.log('weather coming');
+	console.log(localPopup.getContent());
+	console.log(document.getElementById('localWeather'));
+	localPopup.setContent('set weather');
+	gtmap.openPopup(localPopup);
 }
 
 function clearAirQuality() {
-
+	$('#localAirQ').html('');
 }
 
 function showAirQuality(data) {
-
+	//$('#localAirQ').html('<p>air quality loaded<p><hr>');
+	console.log('air q coming');
+	console.log(localPopup.getContent());
+	console.log(document.getElementById('localAirQ'));
+	localPopup.setContent('set air q');
+	gtmap.openPopup(localPopup);
 }
 
 function clearSolar() {
-	
+	$('#localSolar').html('');
 }
 
 function showSolar(data) {
-	
+	//$('#localSolar').html('<h5>'+data.solar.gti.toFixed(0)+' kWh per year</h5><p>This is Global Tilted Solar iirradiation, which equal to enargy provided by the Sun to fixed flat plate system (like PV panels) tilted towards the equator at an angle equal to the latitude.</p>');
+	console.log('solar coming');
+	console.log(localPopup.getContent());
+	console.log(document.getElementById('localSolar'));
+	localPopup.setContent('set solar');
+	gtmap.openPopup(localPopup);
 }
 
 function clearEarthQuakes() {
@@ -374,6 +469,8 @@ function clearEarthQuakes() {
 }
 
 function showEarthQuakes(data, type) {
+	clearEarthQuakes();
+
 	var eqIcon = L.ExtraMarkers.icon({
 		icon: 'bi-bullseye',
 		markerColor: 'red',
@@ -400,7 +497,8 @@ function clearWiki() {
 }
 
 function showWiki(data) {
-	// try https://github.com/MatthewBarker/leaflet-wikipedia
+	clearWiki();
+
 	var wikiIcon = L.ExtraMarkers.icon({
 		icon: 'bi-info-circle',
 		markerColor: 'yellow',
@@ -421,6 +519,7 @@ function clearCharge() {
 }
 
 function showCharge(data, type) {
+	clearCharge();
 
 	var chargerIcon = L.ExtraMarkers.icon({
 		icon: 'bi-battery-charging',
@@ -451,13 +550,14 @@ function clearWebCams() {
 }
 
 function showWebCams(data, type) {
+	clearWebCams();
 
 	var webcamsIcon = L.ExtraMarkers.icon({
 		icon: 'bi-camera-video',
 		markerColor: 'purple',
 		shape: 'circle',
 		prefix: 'bi',
-	  });
+	});
 
 	data.webCamsRaw.result.webcams.forEach(function(camera) {
 		var popupContent;
@@ -482,6 +582,32 @@ function showWebCams(data, type) {
 
 }
 
+var localPopup;
+
+function clearLocalMarker() {
+	localLayer.clearLayers();
+}
+
+function showLocalMarker(latlng){
+	clearLocalMarker();
+
+	var localPopupContent = '<div id="localWeather">weather</div><div id="localAirQ">air quality</div><div id="localSolar">solar</div>';
+	
+	localPopup = L.popup({maxWidth: 500, minWidth: 300}).setContent(localPopupContent);
+
+	var localIcon = L.ExtraMarkers.icon({
+		icon: 'bi-geo',
+		markerColor: 'black',
+		shape: 'circle',
+		prefix: 'bi',
+	});
+
+	L.marker(latlng, {
+		icon: localIcon
+	}).bindPopup(localPopup).addTo(localLayer);
+
+}
+
 function clearAllClusters(){
 	// this help to avoid multiple clusters overlay the map
 	webcamsCluster.clearLayers();
@@ -494,20 +620,12 @@ function clearAllLayers(){
 	chargeLayer.clearLayers();
 	wikiLayer.clearLayers()
 	earthQuakeLayer.clearLayers();
+	localLayer.clearLayers();
 }
 
 // ########################################################################
 // #                 obtaining information section                        #
 // ########################################################################
-
-$('#aboutBtn').on('click', function(){
-	new bootstrap.Modal(document.getElementById('contributionsModal')).show();
-});
-
-$('#clearBtn').on('click', function(){
-	clearAllLayers();
-	clearAllClusters();
-});
 
 function getWebCamsByPosition(latlng) {
 	clearWebCams();
@@ -541,19 +659,16 @@ function getWebCamsByCountry(countryId) {
 			countryId: countryId,
 		},		
 		success: function(result) {
+			webCamsBtn.state('ready');
 			showWebCams(result, 'Clustered');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
+			webCamsBtn.state('ready');
 			console.log("request failed");
 			console.log(jqXHR);
 		}
 	});
 }
-
-$('#webCamsBtn').on('click', function(){
-	clearAllClusters();
-	getWebCamsByCountry(countryId);
-});
 
 function getChargeByPosition(latlng) {
 	clearCharge();
@@ -587,19 +702,16 @@ function getChargeByCountry(countryId) {
 			countryId: countryId,
 		},		
 		success: function(result) {
+			chargeBtn.state('ready');
 			showCharge(result, 'Clustered');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
+			chargeBtn.state('ready');
 			console.log("request failed");
 			console.log(jqXHR);
 		}
 	});
 }
-
-$('#chargeBtn').on('click', function(){
-	clearAllClusters();
-	getChargeByCountry(countryId);
-});
 
 function getWiki(latlng) {
 	clearWiki();
@@ -659,24 +771,21 @@ function getEarthQuakesByCountry(countryId) {
 			west: bounds.getWest(),
 		},		
 		success: function(result) {
+			earthQuakesBtn.state('ready');
 			showEarthQuakes(result, 'Clustered');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
+			earthQuakesBtn.state('ready');
 			console.log("request failed");
 			console.log(jqXHR);
 		}
 	});
 }
 
-$('#earthQuakesBtn').on('click', function(){
-	clearAllClusters();
-	getEarthQuakesByCountry(countryId);
-});
-
 function getSolar(latlng) {
 	clearSolar();
 	$.ajax({
-		url: "php/getSolar1.php",
+		url: "php/getSolar2.php",
 		type: 'POST',
 		dataType: 'json',
 		data: {
@@ -905,6 +1014,7 @@ function getCountryByPosition() {
 	}
 	function error(err) {
 		localisationWaitingDisable();
+		alert('This website does not have access to your location. You can still select country from drop down menu.');
 		console.warn(`ERROR(${err.code}): ${err.message}`);
 	}
 	window.navigator.geolocation.getCurrentPosition(success, error, options);
@@ -919,6 +1029,8 @@ $(window).on('load', function () {
 
 	// get information about specific location
 	gtmap.on('dblclick', function(event) {
+		clearLocalMarker();
+		showLocalMarker(event.latlng);
 		getWeather(event.latlng);
 		getAirQuality(event.latlng);
 		getSolar(event.latlng);
