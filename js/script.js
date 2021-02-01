@@ -133,6 +133,11 @@ function setupMap() {
 		}]
 	}).addTo(gtmap);
 
+	// news button
+	L.easyButton('bi-newspaper', function(btn, map){
+		new bootstrap.Modal(document.getElementById('newsModal')).show();
+	}).addTo(gtmap);
+
 }
 
 // load country core information
@@ -421,46 +426,134 @@ function showNews(data) {
 }
 
 function clearWeather() {
-	$('#localWeather').html('');
+	localWeather.html('');
+	updateLocalPopup();
 }
 
 function showWeather(data) {
-	/*if ($('#localWeather').length) {
-		$('#localWeather').html('<p>weather loaded<p><hr>');
-	} else {
-		console.log('weather element does not exits.');
-	}*/
-	console.log('weather coming');
-	console.log(localPopup.getContent());
-	console.log(document.getElementById('localWeather'));
-	localPopup.setContent('set weather');
-	gtmap.openPopup(localPopup);
+	localWeather.html('<h5>Weather</h5>');
+
+	// define empty table
+	var table_weather = $("<table></table>").attr("class", "table");
+
+	// define columns titles
+	var table_head_col0 = $("<th></th>").text('');
+	var table_head_col1 = $("<th></th>").text('Current');
+	var table_head_col2 = $("<th></th>").text('+1 day');
+	var table_head_col3 = $("<th></th>").text('+2 days');
+	var table_head_col4 = $("<th></th>").text('+3 days');
+	// build table header
+	var table_head_row = $("<tr></tr>");
+	table_head_row.append(table_head_col0);
+	table_head_row.append(table_head_col1);
+	table_head_row.append(table_head_col2);
+	table_head_row.append(table_head_col3);
+	table_head_row.append(table_head_col4);
+	var table_head = $("<thead></thead>");
+	table_head.append(table_head_row);
+	table_weather.append(table_head);
+
+	var table_body = $("<tbody></tbody>");
+
+	// define row of Temperature data
+	var table_body_col0 = $("<td></td>").html('Temp<br> &deg;C');
+	var table_body_col1 = $("<td></td>").html((data.weatherRaw.current.temp-273.15).toFixed(1));
+	var table_body_col2 = $("<td></td>").html((data.weatherRaw.daily[0].temp.day-273.15).toFixed(1));
+	var table_body_col3 = $("<td></td>").html((data.weatherRaw.daily[1].temp.day-273.15).toFixed(1));
+	var table_body_col4 = $("<td></td>").html((data.weatherRaw.daily[2].temp.day-273.15).toFixed(1));
+	// build row of data
+	var table_body_row = $("<tr></tr>");
+	table_body_row.append(table_body_col0);
+	table_body_row.append(table_body_col1);
+	table_body_row.append(table_body_col2);
+	table_body_row.append(table_body_col3);
+	table_body_row.append(table_body_col4);
+	table_body.append(table_body_row);
+
+	// define row of Pressure data
+	table_body_col0 = $("<td></td>").html('Pressure<br>hPa');
+	table_body_col1 = $("<td></td>").html(data.weatherRaw.current.pressure.toFixed(0));
+	table_body_col2 = $("<td></td>").html(data.weatherRaw.daily[0].pressure.toFixed(0));
+	table_body_col3 = $("<td></td>").html(data.weatherRaw.daily[1].pressure.toFixed(0));
+	table_body_col4 = $("<td></td>").html(data.weatherRaw.daily[2].pressure.toFixed(0));
+	// build row of data
+	table_body_row = $("<tr></tr>");
+	table_body_row.append(table_body_col0);
+	table_body_row.append(table_body_col1);
+	table_body_row.append(table_body_col2);
+	table_body_row.append(table_body_col3);
+	table_body_row.append(table_body_col4);
+	table_body.append(table_body_row);
+	
+	// define row of Humidity data
+	table_body_col0 = $("<td></td>").html('Humidity<br>%');
+	table_body_col1 = $("<td></td>").html(data.weatherRaw.current.humidity.toFixed(0));
+	table_body_col2 = $("<td></td>").html(data.weatherRaw.daily[0].humidity.toFixed(0));
+	table_body_col3 = $("<td></td>").html(data.weatherRaw.daily[1].humidity.toFixed(0));
+	table_body_col4 = $("<td></td>").html(data.weatherRaw.daily[2].humidity.toFixed(0));
+	// build row of data
+	table_body_row = $("<tr></tr>");
+	table_body_row.append(table_body_col0);
+	table_body_row.append(table_body_col1);
+	table_body_row.append(table_body_col2);
+	table_body_row.append(table_body_col3);
+	table_body_row.append(table_body_col4);
+	table_body.append(table_body_row);
+
+	// define row of Wind speed data
+	table_body_col0 = $("<td></td>").html('Wind speed<br>metre/sec');
+	table_body_col1 = $("<td></td>").html(data.weatherRaw.current.wind_speed.toFixed(1));
+	table_body_col2 = $("<td></td>").html(data.weatherRaw.daily[0].wind_speed.toFixed(1));
+	table_body_col3 = $("<td></td>").html(data.weatherRaw.daily[1].wind_speed.toFixed(1));
+	table_body_col4 = $("<td></td>").html(data.weatherRaw.daily[2].wind_speed.toFixed(1));
+	// build row of data
+	table_body_row = $("<tr></tr>");
+	table_body_row.append(table_body_col0);
+	table_body_row.append(table_body_col1);
+	table_body_row.append(table_body_col2);
+	table_body_row.append(table_body_col3);
+	table_body_row.append(table_body_col4);
+	table_body.append(table_body_row);
+
+	// define row of Clouds data
+	table_body_col0 = $("<td></td>").html('Clouds<br>%');
+	table_body_col1 = $("<td></td>").html(data.weatherRaw.current.clouds.toFixed(0));
+	table_body_col2 = $("<td></td>").html(data.weatherRaw.daily[0].clouds.toFixed(0));
+	table_body_col3 = $("<td></td>").html(data.weatherRaw.daily[1].clouds.toFixed(0));
+	table_body_col4 = $("<td></td>").html(data.weatherRaw.daily[2].clouds.toFixed(0));
+	// build row of data
+	table_body_row = $("<tr></tr>");
+	table_body_row.append(table_body_col0);
+	table_body_row.append(table_body_col1);
+	table_body_row.append(table_body_col2);
+	table_body_row.append(table_body_col3);
+	table_body_row.append(table_body_col4);
+	table_body.append(table_body_row);
+
+	table_weather.append(table_body);
+	localWeather.append(table_weather);
+	localWeather.append('<hr>');
+	updateLocalPopup();
 }
 
 function clearAirQuality() {
-	$('#localAirQ').html('');
+	airQualityWeather.html('');
+	updateLocalPopup();
 }
 
 function showAirQuality(data) {
-	//$('#localAirQ').html('<p>air quality loaded<p><hr>');
-	console.log('air q coming');
-	console.log(localPopup.getContent());
-	console.log(document.getElementById('localAirQ'));
-	localPopup.setContent('set air q');
-	gtmap.openPopup(localPopup);
+	airQualityWeather.html('<h5>Air quality: '+data.airQualityRaw.data.current.pollution.aqius+'</h5><p>The lower index, the better, cleaner air.</p><hr>');
+	updateLocalPopup();
 }
 
 function clearSolar() {
-	$('#localSolar').html('');
+	solarWeather.html('');
+	updateLocalPopup();
 }
 
 function showSolar(data) {
-	//$('#localSolar').html('<h5>'+data.solar.gti.toFixed(0)+' kWh per year</h5><p>This is Global Tilted Solar iirradiation, which equal to enargy provided by the Sun to fixed flat plate system (like PV panels) tilted towards the equator at an angle equal to the latitude.</p>');
-	console.log('solar coming');
-	console.log(localPopup.getContent());
-	console.log(document.getElementById('localSolar'));
-	localPopup.setContent('set solar');
-	gtmap.openPopup(localPopup);
+	solarWeather.html('<h5>Solar irradiance '+data.solar.gti.toFixed(0)+'</h5><p>The solar irradiance is provided in kWh per year. This is total solar resource available to fixed flat plate system tilted towards the equator at an angle equal to the latitude.</p>');
+	updateLocalPopup();
 }
 
 function clearEarthQuakes() {
@@ -582,7 +675,18 @@ function showWebCams(data, type) {
 
 }
 
-var localPopup;
+var localPopup = L.popup({maxWidth: 270});
+var localWeather = $('<div></div>').html('');
+var airQualityWeather = $('<div></div>').html('');
+var solarWeather = $('<div></div>').html('');
+
+function updateLocalPopup(){
+	var localPopupContent = $('<div></div>');
+	localPopupContent.append(localWeather);
+	localPopupContent.append(airQualityWeather);
+	localPopupContent.append(solarWeather);
+	localPopup.setContent(localPopupContent.html());
+}
 
 function clearLocalMarker() {
 	localLayer.clearLayers();
@@ -590,10 +694,6 @@ function clearLocalMarker() {
 
 function showLocalMarker(latlng){
 	clearLocalMarker();
-
-	var localPopupContent = '<div id="localWeather">weather</div><div id="localAirQ">air quality</div><div id="localSolar">solar</div>';
-	
-	localPopup = L.popup({maxWidth: 500, minWidth: 300}).setContent(localPopupContent);
 
 	var localIcon = L.ExtraMarkers.icon({
 		icon: 'bi-geo',
@@ -604,7 +704,7 @@ function showLocalMarker(latlng){
 
 	L.marker(latlng, {
 		icon: localIcon
-	}).bindPopup(localPopup).addTo(localLayer);
+	}).bindPopup(localPopup).addTo(localLayer).openPopup();
 
 }
 
