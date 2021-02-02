@@ -422,7 +422,18 @@ function clearNews() {
 }
 
 function showNews(data) {
-
+	data.news.forEach(function (news) {
+		if (news.description != 'text/plain...') {
+			news['description_enable'] = true;
+		} else {
+			news['description_enable'] = false;
+		}
+		if (news.image != 'None') {
+			news['image_enable'] = true;
+		} else {
+			news['image_enable'] = false;
+		}
+	})
 	const source = document.getElementById('newsTemplate').innerHTML;
 	const template = Handlebars.compile(source);
 	document.getElementById('newsContainer').innerHTML = template(data);
@@ -598,9 +609,9 @@ function showWebCams(data, type) {
 	data.webCams.forEach(function(camera) {
 		var popupContent;
 		if (camera.player.live.available === true) {
-			popupContent = '<h5>Web Camera</h5><a href='+camera.player.live.embed+' target="_blank"><img src='+camera.image.current.preview+' class="img-fluid"></a><p>Live view available';
+			popupContent = '<h5>Web Camera</h5><a href='+camera.player.live.embed+' target="_blank"><img src='+camera.image.current.preview+' class="img-fluid"></a><p>Live view available</p>';
 		} else {
-			popupContent = '<h5>Web Camera</h5><img src='+camera.image.current.preview+' class="img-fluid">';
+			popupContent = '<h5>Web Camera</h5><img src='+camera.image.current.preview+' class="img-fluid"><p>Live view NOT available</p>';
 		}
 		var popup = L.popup({maxWidth: 500, minWidth: 300}).setContent(popupContent);
 		var marker = L.marker(L.latLng(camera.location.latitude, camera.location.longitude), {

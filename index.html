@@ -32,11 +32,14 @@
 			{{#each news}}
 			<article class="news">
 				<a href={{this.url}} class="link-dark" target="_blank"><h2>{{this.title}}</h2></a>
-
-				<img class="img-fluid" src={{this.image}}>
+				{{#if this.image_enable}}
+					<img class="img-fluid" src={{this.image}}>
+				{{/if}}
 				<figure>
 					<blockquote class="blockquote">
+						{{#if this.description_enable}}
 						<p class="description">{{this.description}}</p>
+						{{/if}}
 					</blockquote>
 					<figcaption class="blockquote-footer">
 						{{this.author}}, {{this.published}}
@@ -98,7 +101,7 @@
 						<p>User can:</p>
 						<ul>
 							<li>click on capital marker (green) to get some general facts about the country</li>
-							<li>double click on any location on the map to get local information about weather, air quality, solar irradiance. In additional various markers will indicate nearest car charging stations, Wikipedia entries, Web Cameras and earth quakes.</li>
+							<li>double click on any location on the map to get local information about weather, air quality, solar irradiance. In additional various markers indicate nearest car charging stations, Wikipedia entries, Web Cameras and earthquakes.</li>
 						</ul>
 						<p>The application uses third party APIs:</p>
 						<ul>
