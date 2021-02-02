@@ -61,7 +61,7 @@
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-		$output['earthQuakesRaw'] = $results;
+		$output['earthQuakes'] = $results['earthquakes'];
 	}
 
     $output['status']['code'] = "200";

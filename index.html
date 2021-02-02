@@ -15,7 +15,6 @@
 		<link href="vendors/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 		<script src="vendors/bootstrap/js/bootstrap.min.js"></script>
 		<link href="vendors/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-
 		<link href="vendors/leaflet/css/leaflet.css" rel="stylesheet"/>
 		<script src="vendors/leaflet/js/leaflet.js"></script>
 		<script src="vendors/leaflet-providers/js/leaflet-providers.js"></script>
@@ -28,6 +27,27 @@
 		<script src="vendors/leaflet-easy-button/js/easy-button.js"></script>
 		<script src="vendors/jschart/chart.js" type="text/javascript"></script>
 		
+		<script src="vendors/handlebars/js/handlebars.min.js"></script>
+		<script id="newsTemplate" type="text/x-handlebars-template">
+			{{#each news}}
+			<article class="news">
+				<a href={{this.url}} class="link-dark" target="_blank"><h2>{{this.title}}</h2></a>
+
+				<img class="img-fluid" src={{this.image}}>
+				<figure>
+					<blockquote class="blockquote">
+						<p class="description">{{this.description}}</p>
+					</blockquote>
+					<figcaption class="blockquote-footer">
+						{{this.author}}, {{this.published}}
+					</figcaption>
+					<hr>
+				</figure>
+
+			</article>
+			{{/each}}
+		</script>
+
 	</head>
 
 	<body>
@@ -69,10 +89,18 @@
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="contributionsModalLabel">This website uses:</h5>
+						<h5 class="modal-title" id="contributionsModalLabel">About Gazetteer</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
+						<p>The Gazetter is web application, which provides various information about countries. User can select country from the drop down list or by allowing Gazzetter to access user’s location.</p>
+						<p>Once the country is selected, the capital and country boundary are displayed on the map.</p>
+						<p>User can:</p>
+						<ul>
+							<li>click on capital marker (green) to get some general facts about the country</li>
+							<li>double click on any location on the map to get local information about weather, air quality, solar irradiance. In additional various markers will indicate nearest car charging stations, Wikipedia entries, Web Cameras and earth quakes.</li>
+						</ul>
+						<p>The application uses third party APIs:</p>
 						<ul>
 							<li>&copy; <a href="http://www.geonames.org">GeoNames</a></li>
 							<li>&copy; <a href="https://opencagedata.com">OpenCage</a></li>
@@ -85,6 +113,9 @@
 							<li>&copy; <a href="https://openchargemap.org">Open Charge Map</a></li>
 							<li>&copy; <a href="https://www.windy.com>IQAir">Windy.com</a></li>
 							<li>&copy; <a href="https://currentsapi.services/en">Currents API</a></li>
+						</ul>
+						<p>The application uses third party software (libraries and plugins):</p>
+						<ul>
 							<li>&copy; <a href="https://github.com/leaflet-extras/leaflet-providers">Leaflet Providers</a></li>
 							<li>&copy; <a href="https://github.com/coryasilva/Leaflet.ExtraMarkers">Leaflet ExtraMarkers</a></li>
 							<li>&copy; <a href="https://github.com/Leaflet/Leaflet.markercluster">Leaflet MarkerCluster</a></li>
@@ -93,8 +124,10 @@
 							<li>&copy; <a href="https://icons.getbootstrap.com/">Bootstrap Icons</a></li>
 							<li>&copy; <a href="https://jquery.com/">JQuery</a></li>
 							<li>&copy; <a href="https://www.cssscript.com/small-line-chart-generator-javascript-canvas-jschart">Small Line Chart</a></li>
-							<li>&copy; <a href="https://www.w3schools.com/graphics/canvas_clock.asp">Analog clock</a></li>						
+							<li>&copy; <a href="https://www.w3schools.com/graphics/canvas_clock.asp">Analog clock</a></li>
+							<li>&copy; <a href="https://handlebarsjs.com">Handlebars</a></li>	
 						</ul>
+						<p>The Gazetteer was created by Sławomir Blok as part of Coding traineeship on <a href="https://itcareerswitch.co.uk/" target="_blank">IT Carrer Switch</a></p>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -184,10 +217,10 @@
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="newsModalLabel">News from <span class="ci_countryName"></span></h5>
+						<h1 class="modal-title" id="newsModalLabel">News from <span class="ci_countryName"></span></h1>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
-					<div class="modal-body">
+					<div class="modal-body" id="newsContainer">
 						
 					</div>
 					<div class="modal-footer">

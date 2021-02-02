@@ -31,11 +31,11 @@
 		$results = json_decode($response, TRUE);
 		// store information
 		//$output['solarRaw'] = $results;
-		$output['solar']['dni'] = $results['annual']['data']['DNI'];	// Direct normal irradiation kWh/m^2
-		$output['solar']['ghi'] = $results['annual']['data']['GHI'];	// Global horizontal irradiation kWh/m^2
-		$output['solar']['dhi'] = $results['annual']['data']['DIF'];	// Diffuse horizontal irradiation kWh/m^2
+		//$output['solar']['dni'] = $results['annual']['data']['DNI'];	// Direct normal irradiation kWh/m^2
+		//$output['solar']['ghi'] = $results['annual']['data']['GHI'];	// Global horizontal irradiation kWh/m^2
+		//$output['solar']['dhi'] = $results['annual']['data']['DIF'];	// Diffuse horizontal irradiation kWh/m^2
 		$output['solar']['gti'] = $results['annual']['data']['GTI_opta'];	// Global tilted irradiation at optimum tilt angle kWh/m^2
-		$output['solar']['tilt'] = $results['annual']['data']['OPTA'];	// Optimum tilt of PV modules degrees
+		//$output['solar']['tilt'] = $results['annual']['data']['OPTA'];	// Optimum tilt of PV modules degrees
 	}
 
     $output['status']['code'] = "200";

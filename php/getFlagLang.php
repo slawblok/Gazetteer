@@ -44,12 +44,11 @@
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-		//$output['restCountriesRaw'] = $results;
 		$output['restCountries']['countryName'] = copy_if_exist('name', $results);
 		$output['restCountries']['iso_a3'] = copy_if_exist('alpha2Code', $results);
 		$output['restCountries']['iso_a2'] = copy_if_exist('alpha3Code', $results);
 		$output['restCountries']['flag'] = copy_if_exist('flag', $results);
-		$output['restCountries']['languages'] = copy_if_exist('languages', $results);
+		$output['restCountries']['language'] = copy_if_exist('name', $results['languages'][0]);
     }
 
     $output['status']['code'] = "200";

@@ -5,7 +5,7 @@
     // global variables
     $apiKeys = json_decode(file_get_contents("APIKeys.json"));
 	$output = NULL;
-    
+	
     // ########################################################################
 	// #          https://www.iqair.com/air-pollution-data-api                # 
 	// #        get air quality and polutions for given coordinates           #
@@ -31,7 +31,12 @@
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-		$output['airQualityRaw'] = $results;
+		if ($results['status'] == 'success') {
+			$output['airQuality']['aqius'] = $results['data']['current']['pollution']['aqius'];
+		} else {
+			$output['airQuality']['aqius'] = null;
+		}
+		
 	}
 
     $output['status']['code'] = "200";

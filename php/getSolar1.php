@@ -39,17 +39,17 @@
             $latitude = $_REQUEST['latitude'];
             $dhi = $ghi - ($dni*cos(deg2rad(abs($latitude)))); // GHI is geometric sum of DNI and DHI
             $tilt = abs($latitude);
-            $output['solar']['dni'] = $dni; // Direct normal irradiation kWh/m^2
-            $output['solar']['ghi'] = $ghi; // Global horizontal irradiation kWh/m^2
-            $output['solar']['dhi'] = $dhi; // Diffuse horizontal irradiation kWh/m^2
+            //$output['solar']['dni'] = $dni; // Direct normal irradiation kWh/m^2
+            //$output['solar']['ghi'] = $ghi; // Global horizontal irradiation kWh/m^2
+            //$output['solar']['dhi'] = $dhi; // Diffuse horizontal irradiation kWh/m^2
             $output['solar']['gti'] = $results['outputs']['avg_lat_tilt']['annual']*365;	// Global tilted irradiation at optimum tiltangle kWh/m^2
-            $output['solar']['tilt'] = $tilt;	// Optimum tilt of PV modules degrees -> related to latitude
+            //$output['solar']['tilt'] = $tilt;	// Optimum tilt of PV modules degrees -> related to latitude
         } else {
-            $output['solar']['dni'] = null;
-            $output['solar']['ghi'] = null;
-            $output['solar']['dhi'] = null;
+            //$output['solar']['dni'] = null;
+            //$output['solar']['ghi'] = null;
+            //$output['solar']['dhi'] = null;
             $output['solar']['gti'] = null;
-            $output['solar']['tilt'] = null;
+            //$output['solar']['tilt'] = null;
         }
     }
 

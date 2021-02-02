@@ -38,7 +38,6 @@
 		$output['calendarific']['error'] = 'Failed to get holidays';
 	} else {
         // store information
-        $results = NULL;
         $nationalHolidays = array();
         if ($enable) {
             $results = json_decode($response, TRUE);
@@ -50,8 +49,7 @@
                 }
             }
         }
-        $output['calendarific']=$nationalHolidays;
-        //$output['calendarificRaw'] = $results;   
+        $output['calendarific']=$nationalHolidays;   
     }
 
     $output['status']['code'] = "200";

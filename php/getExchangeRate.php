@@ -49,7 +49,6 @@
             $rates = $results['rates'];
         }
 		// store information
-        //$output['exchangeRatesRaw'] = $results;
         // calculate exchange rate between country currency and other major currencies
         // NOTE: OpenExchengeRates provides only exchange to USD in free plan;
         // thus the exchange rate is calculated as follow:

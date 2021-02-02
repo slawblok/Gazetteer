@@ -21,8 +21,6 @@
     $url .= '&country='.$_REQUEST['countryId']['iso_a2'];
     $url .= '&apiKey='.$apiKeys->currentsapi->key;
     
-    $output['url'] = $url;
-
     // request Currents API
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
@@ -36,7 +34,10 @@
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-        $output['newsRaw'] = $results;
+		if ($results['status'] == 'ok') {
+			$output['news'] = $results['news'];
+			
+		}
     }
 
     $output['status']['code'] = "200";

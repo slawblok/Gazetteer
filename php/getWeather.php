@@ -11,10 +11,10 @@
 	// #                 get weather for given coordinates                    #
 	// ########################################################################
 
-    $openWatherMapBaseUrl = 'api.openweathermap.org/data/2.5/onecall?';
+    $openWeatherMapBaseUrl = 'api.openweathermap.org/data/2.5/onecall?';
     
 	// build OpenWeatherMap API URL
-	$url = $openWatherMapBaseUrl;
+	$url = $openWeatherMapBaseUrl;
 	$url .= '&lat='.$_REQUEST['latitude'].'&lon='.$_REQUEST['longitude'];
 	$url .= '&appid='.$apiKeys->openweathermap->key;
 	$url .= '&exclude=minutely,hourly';	// limit amount of information
@@ -33,7 +33,26 @@
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-		$output['weatherRaw'] = $results;
+		$weather = array();
+		// take current weather
+		$point['temperature'] = $results['current']['temp']-273.15;
+		$point['pressure'] = $results['current']['pressure'];
+		$point['humidity'] = $results['current']['humidity'];
+		$point['wind_speed'] = $results['current']['wind_speed'];
+		$point['clouds'] = $results['current']['clouds'];
+		array_push($weather, $point);
+		foreach ($results['daily'] as $id => $day) {
+			// take also weather for next 1-3 days
+			if ($id >= 1 && $id <=3) {
+				$point['temperature'] = $day['temp']['day']-273.15;
+				$point['pressure'] = $day['pressure'];
+				$point['humidity'] = $day['humidity'];
+				$point['wind_speed'] = $day['wind_speed'];
+				$point['clouds'] = $day['clouds'];
+				array_push($weather, $point);
+			}
+		}
+		$output['weather'] = $weather;
 	}
 
     $output['status']['code'] = "200";

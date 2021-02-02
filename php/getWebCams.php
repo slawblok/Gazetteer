@@ -43,7 +43,9 @@
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-        $output['webCamsRaw'] = $results;
+        if ($results['status'] == 'OK') {
+            $output['webCams'] = $results['result']['webcams'];
+        }
     }
 
     $output['status']['code'] = "200";

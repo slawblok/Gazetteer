@@ -237,13 +237,12 @@
 		} else {
 			$results = json_decode($response, TRUE);
 			// store information
-			//$output['capitalCoordinatesRaw'] = $results;
-			$componenets = $results['results'][0]['components'];
+			$componenets = copy_if_exist('components', $results['results'][0]);
 			$output['capitalCoordinates']['countryName'] = copy_if_exist('country', $componenets);
 			$output['capitalCoordinates']['iso_a3'] = copy_if_exist('ISO_3166-1_alpha-3', $componenets);
 			$output['capitalCoordinates']['iso_a2'] = copy_if_exist('ISO_3166-1_alpha-2', $componenets);
 			$output['capitalCoordinates']['city'] = copy_if_exist('city', $componenets);
-			$geometry = $results['results'][0]['geometry'];
+			$geometry = copy_if_exist('geometry', $results['results'][0]);
 			$output['capitalCoordinates']['longitude'] = copy_if_exist('lng', $geometry);
 			$output['capitalCoordinates']['latitude'] = copy_if_exist('lat', $geometry);
 		}

@@ -12,7 +12,7 @@ var webcamsLayer;
 var webcamsCluster;
 var localLayer;
 var timeZoneOffset = 0;
-var countryId;
+var countryId = {};
 var earthQuakesBtn;
 var chargeBtn;
 var webCamsBtn;
@@ -239,7 +239,7 @@ function clearFlagLang(){
 // show country flag and language
 function showFlagLang(data) {
 	// load information to Bootstrap modal
-	$('#ci_language').text(data.restCountries.languages[0].name);
+	$('#ci_language').text(data.restCountries.language);
 	$('#ci_flag').attr('src', data.restCountries.flag).show();
 }
 
@@ -418,11 +418,14 @@ function showCovid19(data) {
 }
 
 function clearNews() {
-	
+	document.getElementById('newsContainer').innerHTML = '';
 }
 
 function showNews(data) {
-	
+
+	const source = document.getElementById('newsTemplate').innerHTML;
+	const template = Handlebars.compile(source);
+	document.getElementById('newsContainer').innerHTML = template(data);
 }
 
 function clearWeather() {
@@ -433,105 +436,45 @@ function clearWeather() {
 function showWeather(data) {
 	localWeather.html('<h5>Weather</h5>');
 
-	// define empty table
-	var table_weather = $("<table></table>").attr("class", "table");
-
 	// define columns titles
-	var table_head_col0 = $("<th></th>").text('');
-	var table_head_col1 = $("<th></th>").text('Current');
-	var table_head_col2 = $("<th></th>").text('+1 day');
-	var table_head_col3 = $("<th></th>").text('+2 days');
-	var table_head_col4 = $("<th></th>").text('+3 days');
-	// build table header
-	var table_head_row = $("<tr></tr>");
-	table_head_row.append(table_head_col0);
-	table_head_row.append(table_head_col1);
-	table_head_row.append(table_head_col2);
-	table_head_row.append(table_head_col3);
-	table_head_row.append(table_head_col4);
-	var table_head = $("<thead></thead>");
-	table_head.append(table_head_row);
-	table_weather.append(table_head);
-
-	var table_body = $("<tbody></tbody>");
-
-	// define row of Temperature data
-	var table_body_col0 = $("<td></td>").html('Temp<br> &deg;C');
-	var table_body_col1 = $("<td></td>").html((data.weatherRaw.current.temp-273.15).toFixed(1));
-	var table_body_col2 = $("<td></td>").html((data.weatherRaw.daily[0].temp.day-273.15).toFixed(1));
-	var table_body_col3 = $("<td></td>").html((data.weatherRaw.daily[1].temp.day-273.15).toFixed(1));
-	var table_body_col4 = $("<td></td>").html((data.weatherRaw.daily[2].temp.day-273.15).toFixed(1));
-	// build row of data
-	var table_body_row = $("<tr></tr>");
-	table_body_row.append(table_body_col0);
-	table_body_row.append(table_body_col1);
-	table_body_row.append(table_body_col2);
-	table_body_row.append(table_body_col3);
-	table_body_row.append(table_body_col4);
-	table_body.append(table_body_row);
-
-	// define row of Pressure data
-	table_body_col0 = $("<td></td>").html('Pressure<br>hPa');
-	table_body_col1 = $("<td></td>").html(data.weatherRaw.current.pressure.toFixed(0));
-	table_body_col2 = $("<td></td>").html(data.weatherRaw.daily[0].pressure.toFixed(0));
-	table_body_col3 = $("<td></td>").html(data.weatherRaw.daily[1].pressure.toFixed(0));
-	table_body_col4 = $("<td></td>").html(data.weatherRaw.daily[2].pressure.toFixed(0));
-	// build row of data
-	table_body_row = $("<tr></tr>");
-	table_body_row.append(table_body_col0);
-	table_body_row.append(table_body_col1);
-	table_body_row.append(table_body_col2);
-	table_body_row.append(table_body_col3);
-	table_body_row.append(table_body_col4);
-	table_body.append(table_body_row);
+	var row_titles = $("<tr></tr>")
+		// first 3 columns
+		.append($("<th></th>").text(''))
+		.append($("<th></th>").text('Current'))
+		.append($("<th></th>").text('+1 day'));
+		// 4th and more columns
+	for (var i=2; i<data.weather.length; i++) {
+		row_titles.append($("<th></th>").text('+'+i+' days'));
+	}
 	
-	// define row of Humidity data
-	table_body_col0 = $("<td></td>").html('Humidity<br>%');
-	table_body_col1 = $("<td></td>").html(data.weatherRaw.current.humidity.toFixed(0));
-	table_body_col2 = $("<td></td>").html(data.weatherRaw.daily[0].humidity.toFixed(0));
-	table_body_col3 = $("<td></td>").html(data.weatherRaw.daily[1].humidity.toFixed(0));
-	table_body_col4 = $("<td></td>").html(data.weatherRaw.daily[2].humidity.toFixed(0));
-	// build row of data
-	table_body_row = $("<tr></tr>");
-	table_body_row.append(table_body_col0);
-	table_body_row.append(table_body_col1);
-	table_body_row.append(table_body_col2);
-	table_body_row.append(table_body_col3);
-	table_body_row.append(table_body_col4);
-	table_body.append(table_body_row);
+	// define table rows and their labels
+	var rows = {};
+	rows['temperature'] = $("<tr></tr>").append($("<td></td>").html('Temp<br> &deg;C'));
+	rows['pressure'] = $("<tr></tr>").append($("<td></td>").html('Pressure<br>hPa'));
+	rows['humidity'] = $("<tr></tr>").append($("<td></td>").html('Humidity<br>%'));
+	rows['wind_speed'] = $("<tr></tr>").append($("<td></td>").html('Wind speed<br>metre/sec'));
+	rows['clouds'] = $("<tr></tr>").append($("<td></td>").html('Clouds<br>%'));
+	data.weather.forEach(function(point) {
+		rows['temperature'].append($("<td></td>").html(point.temperature.toFixed(1)));
+		rows['pressure'].append($("<td></td>").html(point.pressure.toFixed(0))); 
+		rows['humidity'].append($("<td></td>").html(point.humidity.toFixed(0)));
+		rows['wind_speed'].append($("<td></td>").html(point.wind_speed.toFixed(1)));
+		rows['clouds'].append($("<td></td>").html(point.clouds.toFixed(0)));
+	})
 
-	// define row of Wind speed data
-	table_body_col0 = $("<td></td>").html('Wind speed<br>metre/sec');
-	table_body_col1 = $("<td></td>").html(data.weatherRaw.current.wind_speed.toFixed(1));
-	table_body_col2 = $("<td></td>").html(data.weatherRaw.daily[0].wind_speed.toFixed(1));
-	table_body_col3 = $("<td></td>").html(data.weatherRaw.daily[1].wind_speed.toFixed(1));
-	table_body_col4 = $("<td></td>").html(data.weatherRaw.daily[2].wind_speed.toFixed(1));
-	// build row of data
-	table_body_row = $("<tr></tr>");
-	table_body_row.append(table_body_col0);
-	table_body_row.append(table_body_col1);
-	table_body_row.append(table_body_col2);
-	table_body_row.append(table_body_col3);
-	table_body_row.append(table_body_col4);
-	table_body.append(table_body_row);
+	// define empty table
+	var table = $("<table></table>").attr("class", "table");
+	// load columns titles to table
+	table.append($("<thead></thead>").append(row_titles));
+	// load rows to table
+	var table_body = $("<tbody></tbody>");
+	for (var key in rows) {
+		table_body.append(rows[key]);
+	}
+	table.append(table_body);
+	// load table to dedicated HTML element
+	localWeather.append(table);
 
-	// define row of Clouds data
-	table_body_col0 = $("<td></td>").html('Clouds<br>%');
-	table_body_col1 = $("<td></td>").html(data.weatherRaw.current.clouds.toFixed(0));
-	table_body_col2 = $("<td></td>").html(data.weatherRaw.daily[0].clouds.toFixed(0));
-	table_body_col3 = $("<td></td>").html(data.weatherRaw.daily[1].clouds.toFixed(0));
-	table_body_col4 = $("<td></td>").html(data.weatherRaw.daily[2].clouds.toFixed(0));
-	// build row of data
-	table_body_row = $("<tr></tr>");
-	table_body_row.append(table_body_col0);
-	table_body_row.append(table_body_col1);
-	table_body_row.append(table_body_col2);
-	table_body_row.append(table_body_col3);
-	table_body_row.append(table_body_col4);
-	table_body.append(table_body_row);
-
-	table_weather.append(table_body);
-	localWeather.append(table_weather);
 	localWeather.append('<hr>');
 	updateLocalPopup();
 }
@@ -542,7 +485,7 @@ function clearAirQuality() {
 }
 
 function showAirQuality(data) {
-	airQualityWeather.html('<h5>Air quality: '+data.airQualityRaw.data.current.pollution.aqius+'</h5><p>The lower index, the better, cleaner air.</p><hr>');
+	airQualityWeather.html('<h5>Air quality: '+data.airQuality.aqius+'</h5><p>The lower index, the better, cleaner air.</p><hr>');
 	updateLocalPopup();
 }
 
@@ -570,7 +513,7 @@ function showEarthQuakes(data, type) {
 		shape: 'circle',
 		prefix: 'bi',
 	  });
-	data.earthQuakesRaw.earthquakes.forEach(function(eq) {
+	data.earthQuakes.forEach(function(eq) {
 		var marker = L.marker(L.latLng(eq.lat, eq.lng), {
 			icon: eqIcon
 		}).bindPopup('<h5>Earthquake</h5><p>Magnitude: '+eq.magnitude+'<br>Date: '+eq.datetime+'</p>');
@@ -598,7 +541,7 @@ function showWiki(data) {
 		shape: 'circle',
 		prefix: 'bi',
 	  });
-	data.wikiRaw.geonames.forEach(function(entry) {
+	data.wiki.forEach(function(entry) {
 		L.marker(L.latLng(entry.lat, entry.lng), {
 			icon: wikiIcon
 		}).bindPopup('<h5>'+entry.title+'</h5><p>'+entry.summary+'</p><br><a href=https://'+entry.wikipediaUrl+' target="_blank">Click here to go to Wikipedia.org</a>')
@@ -621,7 +564,7 @@ function showCharge(data, type) {
 		prefix: 'bi',
 	  });
 
-	data.chargeRaw.forEach(function(station) {
+	data.charge.forEach(function(station) {
 		var marker = L.marker(L.latLng(station.AddressInfo.Latitude, station.AddressInfo.Longitude), {
 			icon: chargerIcon
 		}).bindPopup('<h5>Charge station</h5><p>Usage cost: '+station.UsageCost+'<br>Connections: '+station.Connections.length+'<br>Address: '+station.AddressInfo.AddressLine1+', '+station.AddressInfo.Town+', '+station.AddressInfo.Postcode+', '+'</p>');
@@ -652,7 +595,7 @@ function showWebCams(data, type) {
 		prefix: 'bi',
 	});
 
-	data.webCamsRaw.result.webcams.forEach(function(camera) {
+	data.webCams.forEach(function(camera) {
 		var popupContent;
 		if (camera.player.live.available === true) {
 			popupContent = '<h5>Web Camera</h5><a href='+camera.player.live.embed+' target="_blank"><img src='+camera.image.current.preview+' class="img-fluid"></a><p>Live view available';
@@ -1153,11 +1096,16 @@ $(window).on('load', function () {
 															   .val(country.iso_a2)
 															   .attr('iso_a3', country.iso_a3));
 			});
+			
 			// set United Kingdom as default country
+			countryId.countryName = 'United Kingdom';
+			countryId.iso_a2 = 'GB';
+			countryId.iso_a3 = 'GBR';
 			$('#countryList').val('GB');
 			var southWest = L.latLng(49.96, -7.57);
 			var northEast = L.latLng(58.64,  1.68);
 			var bounds = L.latLngBounds(southWest, northEast);
+
 			gtmap.flyToBounds(bounds);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {

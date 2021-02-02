@@ -44,7 +44,7 @@
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-        $output['chargeRaw'] = $results;
+        $output['charge'] = $results;
     }
 
     $output['status']['code'] = "200";

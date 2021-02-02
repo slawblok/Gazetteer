@@ -36,7 +36,7 @@
 	} else {
 		$results = json_decode($response, TRUE);
 		// store information
-		$output['wikiRaw'] = $results;
+		$output['wiki'] = $results['geonames'];
 	}
 
     $output['status']['code'] = "200";
