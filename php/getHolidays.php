@@ -37,7 +37,7 @@
         } else {
             // convert data to array
             $results = json_decode($response, TRUE);
-            if (isset($results['response']['holidays'])) {
+            if (!(isset($results['response']['holidays']))) {
                 $output['status']['error'] = 'Unable to decode JSON';
             } else {
                 $holidays = $results['response']['holidays'];
