@@ -23,7 +23,7 @@
 
 	// build REST Countries API URL
     $url = $restCountriesBaseUrl;
-    if (array_key_exists('iso_a3', $_REQUEST['countryId'])) {
+    if (!is_null($_REQUEST['countryId']['iso_a3'])) {
         $url .= 'alpha/';
         $url .= $_REQUEST['countryId']['iso_a3'];
     } else {

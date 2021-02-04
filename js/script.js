@@ -1231,26 +1231,28 @@ function getFlagLang(countryId) {
 }
 
 function processCoreInfo(data){
-	// validate new country
+	showCoreInfo(data);
+	clearFlagLang();
+	clearHolidays();
+	clearCovid19();
+	clearNews();
+	clearExchangeRates();
+	// validate new country and request more data
 	if (data.countryId != null) {
-		if (data.countryId.countryName != null && data.countryId.iso_a2 != null && data.countryId.iso_a3 != null) {
-			countryId = data.countryId;
-			showCoreInfo(data);
-			clearFlagLang();
+		countryId = data.countryId;
+		if (data.countryId.countryName != null) {
 			getFlagLang(data.countryId);
-			clearHolidays();
+		}
+		if (data.countryId.iso_a2 != null) {
 			getHolidays(data.countryId);
-			clearCovid19();
 			getCovid19(data.countryId);
-			clearNews();
 			getNews(data.countryId);
-			clearExchangeRates();
-			if (data.openCage != null) {
-				if (data.openCage.currency != null) {
-					if (data.openCage.currency.iso_code != null) {
-						getExchangeRates(data.openCage.currency.iso_code);
-					}
-				}
+		}
+	}
+	if (data.openCage != null) {
+		if (data.openCage.currency != null) {
+			if (data.openCage.currency.iso_code != null) {
+				getExchangeRates(data.openCage.currency.iso_code);
 			}
 		}
 	}
