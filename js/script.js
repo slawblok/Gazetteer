@@ -77,6 +77,9 @@ function setupMap() {
 	L.easyButton('bi-x-circle', function(btn, map){
 		clearAllLayers();
 		clearAllClusters();
+		earthQuakesBtn.state('ready');
+		chargeBtn.state('ready');
+		webCamsBtn.state('ready');
 	}).addTo(gtmap);
 
 	// button to show all earth quakes in the country
@@ -86,8 +89,9 @@ function setupMap() {
 				icon:      'bi-bullseye',
 				title:     'Show all earth quakes in selected country',
 				onClick: function(btn, map) {
-					btn.state('searching');
 					clearAllClusters();
+					fitMap();
+					clearEarthQuakes();
 					getEarthQuakesByCountry(countryId);
 				}
 			}, {
@@ -104,8 +108,9 @@ function setupMap() {
 				icon:      'bi-camera-video',
 				title:     'Show all WebCameras in selected country',
 				onClick: function(btn, map) {
-					btn.state('searching');
 					clearAllClusters();
+					fitMap();
+					clearWebCams();
 					getWebCamsByCountry(countryId);
 				}
 			}, {
@@ -122,8 +127,9 @@ function setupMap() {
 				icon:      'bi-battery-charging',
 				title:     'Show all car chargers in selected country',
 				onClick: function(btn, map) {
-					btn.state('searching');
 					clearAllClusters();
+					fitMap();
+					clearCharge();
 					getChargeByCountry(countryId);
 				}
 			}, {
@@ -140,67 +146,119 @@ function setupMap() {
 
 }
 
+function fitMap(){
+	gtmap.flyToBounds(borderCapitolLayer.getBounds());
+}
+
+function clearCoreInfo() {
+	$('#ci_country_section').hide();
+	$('#ci_timezone_section').hide();
+}
+
 // load country core information
 function showCoreInfo(data) {
+	clearCoreInfo();
 
-	// save time zone offset in global variable to be used by clock showing local time
-	timeZoneOffset = data.openCage.timezone.offset_sec;
-
-	countryId = data.countryId;
-
-	// update map - country borders
+	// update map - country borders and capital marker
 	borderCapitolLayer.clearLayers();
-	L.geoJSON(data.countryBorders, {
-		style: function (feature) {
-			return {
-				color: "green",
-				weight: 2,
-				fill: false,
-			};
-		}
-	})
-	.addTo(borderCapitolLayer);
-	gtmap.flyToBounds(borderCapitolLayer.getBounds());
+
+	// country borders
+	if (!('error' in data.countryBorders)) {
+		L.geoJSON(data.countryBorders, {
+			style: function (feature) {
+				return {
+					color: "green",
+					weight: 2,
+					fill: false,
+				};
+			}
+		})
+		.addTo(borderCapitolLayer);
+		fitMap();
+	}
 	
 	// capitol icon/marker, which can show Bootstrap modal
-	var capitolIcon = L.ExtraMarkers.icon({
-		icon: 'bi-geo-alt',
-		markerColor: 'green',
-		shape: 'circle',
-		prefix: 'bi',
-	  });
-	L.marker(L.latLng(data.capitalCoordinates.latitude, data.capitalCoordinates.longitude), {
-		icon: capitolIcon
-	}).on('click', function() {
-		new bootstrap.Modal(document.getElementById('countryModal')).show();
-	}).addTo(borderCapitolLayer);
+	if (!('error' in data.capitalCoordinates)) {
+		var capitolIcon = L.ExtraMarkers.icon({
+			icon: 'bi-geo-alt',
+			markerColor: 'green',
+			shape: 'circle',
+			prefix: 'bi',
+		});
+		L.marker(L.latLng(data.capitalCoordinates.latitude, data.capitalCoordinates.longitude), {
+			icon: capitolIcon
+		}).on('click', function() {
+			new bootstrap.Modal(document.getElementById('countryModal')).show();
+		}).addTo(borderCapitolLayer);
+	}
 
-	// load information to Bootstrap modal
-	$('.ci_countryName').text(data.countryId.countryName);
-	$('#cs_countryCode').text(data.countryId.iso_a2);
-	if (data.geoNames.capital!=='') {
-		$('#ci_capitalHeader').text(data.geoNames.capital+', ');
-		$('#ci_capitalInfo').text(data.geoNames.capital+' is the capital of ');
-	} else {
-		$('#ci_capitalHeader').text('');
-		$('#ci_capitalInfo').text('This is ');
+	// verify and load information to Bootstrap modal
+	if (data.countryId != null) {
+		if (data.countryId.countryName != null) {
+			$('.ci_countryName').text(data.countryId.countryName);
+		}
+		if (data.countryId.iso_a2 != null) {
+			$('#cs_countryCode').text(data.countryId.iso_a2);
+		}
 	}
-	$('#ci_area').text((Number(data.geoNames.areaInSqKm)/1000).toFixed(0));
-	$('#ci_population').text((Number(data.geoNames.population)/1000/1000).toFixed(1));
-	$('#ci_timeZoneName').text(data.openCage.timezone.name);
-	if (data.openCage.timezone.short_name == 'GMT') {
-		$('#ci_timeZoneNameShort').text(data.openCage.timezone.short_name);
-	} else {
-		$('#ci_timeZoneNameShort').text(data.openCage.timezone.short_name+' or GMT'+data.openCage.timezone.offset_string);
+	if (data.geoNames != null) {
+		if (data.geoNames.capital != null) {
+			if (data.geoNames.capital !== '') {
+				$('#ci_capitalHeader').text(data.geoNames.capital+', ');
+				$('#ci_capitalInfo').text(data.geoNames.capital+' is the capital of ');
+			} else {
+				$('#ci_capitalHeader').text('');
+				$('#ci_capitalInfo').text('This is ');
+			}
+		}
+		if (data.geoNames.areaInSqKm != null) {
+			$('#ci_area').text((Number(data.geoNames.areaInSqKm)/1000).toFixed(0));
+		}
+		if (data.geoNames.population != null) {
+			$('#ci_population').text((Number(data.geoNames.population)/1000/1000).toFixed(1));
+		}
 	}
-	$('#ci_driveOn').text(data.openCage.drive_on);
-	$('#ci_currencyName').text(data.openCage.currency.name);
-	$('.ci_currencySymbol').text(data.openCage.currency.symbol);
+	if (data.openCage != null) {
+		if (data.openCage.timezone != null) {
+			if (data.openCage.timezone.name != null) {
+				$('#ci_timeZoneName').text(data.openCage.timezone.name);
+			}
+			if (data.openCage.timezone.short_name != null) {
+				if (data.openCage.timezone.short_name == 'GMT' || data.openCage.timezone.offset_string == null) {
+					$('#ci_timeZoneNameShort').text(data.openCage.timezone.short_name);
+				} else {
+					$('#ci_timeZoneNameShort').text(data.openCage.timezone.short_name+' or GMT'+data.openCage.timezone.offset_string);
+				}
+			}
+		}
+		if (data.openCage.drive_on != null) {
+			$('#ci_driveOn').text(data.openCage.drive_on);
+		}
+		if (data.openCage.currency != null) {
+			if (data.openCage.currency.name != null) {
+				$('#ci_currencyName').text(data.openCage.currency.name);
+			}
+			if (data.openCage.currency.symbol != null) {
+				$('.ci_currencySymbol').text(data.openCage.currency.symbol);
+			}
+		}
+		if (data.openCage.timezone != null) {
+			if (data.openCage.timezone.offset_sec != null) {
+				// save time zone offset in global variable to be used by clock showing local time
+				timeZoneOffset = data.openCage.timezone.offset_sec;
+				$('#ci_timezone_section').show();
+			}
+		}
+	}
+	// determine if country section should be shown
+	if (!('error' in data.geoNames) && !('error' in data.openCage)) {
+		$('#ci_country_section').show();
+	}
 }
 
 // fit map to current country boundary
 $('#fitBtn').click(function() {
-	gtmap.flyToBounds(borderCapitolLayer.getBounds());
+	fitMap();
 });
 
 function localisationWaitingEnable() {
@@ -233,38 +291,50 @@ function fittingWaitingDisable() {
 
 function clearFlagLang(){
 	$('#ci_flag').hide();
-	$('#ci_language').text('');
+	$('#ci_language_section').hide();
 }
 
 // show country flag and language
 function showFlagLang(data) {
-	// load information to Bootstrap modal
-	$('#ci_language').text(data.restCountries.language);
-	$('#ci_flag').attr('src', data.restCountries.flag).show();
+	clearFlagLang();
+	// verify and load information to Bootstrap modal
+	if (data.restCountries != null) {
+		if (data.restCountries.flag != null) {
+			$('#ci_flag').attr('src', data.restCountries.flag);
+			$('#ci_flag').show();
+		}
+		if (data.restCountries.language != null) {
+			$('#ci_language').text(data.restCountries.language);
+			$('#ci_language_section').show();
+		}
+	}
 }
 
 function clearExchangeRates() {
-	$('#ci_buyMajor').empty();
-	$('#ci_sellMajor').empty();
+	$('#ci_currency_section').hide();
 }
 
 // show country currency exchange rates to few major currencies
 function showExchangeRates(data) {
-	var base = data.exchangeRates.base;
-	var symbol = $('.ci_currencySymbol').text();
-	symbol = symbol.substring(0, symbol.length/2);
-	for (var key in data.exchangeRates[base]){
-		var infoBuy = data.exchangeRates[base][key].toPrecision(3).toLocaleString()+' '+key;
-		var infoSell = data.exchangeRates[key][base].toPrecision(3).toLocaleString()+' '+symbol+' to get 1 '+key;
-		$('#ci_buyMajor').append($('<li></li>').text(infoBuy));
-		$('#ci_sellMajor').append($('<li></li>').text(infoSell));
+	clearExchangeRates();
+	if (!('error' in data.status)) {
+		var base = data.exchangeRates.base;
+		var symbol = $('.ci_currencySymbol').text();
+		symbol = symbol.substring(0, symbol.length/2);
+		$('#ci_buyMajor').empty();
+		$('#ci_sellMajor').empty();
+		for (var key in data.exchangeRates[base]){
+			var infoBuy = data.exchangeRates[base][key].toPrecision(3).toLocaleString()+' '+key;
+			var infoSell = data.exchangeRates[key][base].toPrecision(3).toLocaleString()+' '+symbol+' to get 1 '+key;
+			$('#ci_buyMajor').append($('<li></li>').text(infoBuy));
+			$('#ci_sellMajor').append($('<li></li>').text(infoSell));
+		}
+		$('#ci_currency_section').show();
 	}
 }
 
 function clearHolidays(){
-	$('#ci_nh_number').text('');
-	$('#ci_nh_year').text('');
-	$('#ci_nh').empty();
+	$('#ci_holiday_section').hide();
 }
 
 function monthName(number) {
@@ -310,36 +380,25 @@ function monthName(number) {
 
 // show national holidays
 function showHolidays(data) {
+	clearHolidays();
 	var number = data.calendarific.length;
-	$('#ci_nh_number').text(number);
-	if (number>0) {
+	// check if there is anything to show
+	if (number > 0) {
+		$('#ci_nh_number').text(number);
 		$('#ci_nh_year').text(data.calendarific[0].date.datetime.year);
+		$('#ci_nh').empty();
+		data.calendarific.forEach(function(holiday) {
+			var datetime = holiday.date.datetime;
+			var dateFormated = datetime.day + ' of ' + monthName(datetime.month-1);
+			var info = dateFormated+', '+holiday.name;
+			$('#ci_nh').append($('<li></li>').text(info));
+		});
+		$('#ci_holiday_section').show();
 	}
-	data.calendarific.forEach(function(holiday) {
-		var datetime = holiday.date.datetime;
-		var dateFormated = datetime.day + ' of ' + monthName(datetime.month-1);
-		var info = dateFormated+', '+holiday.name;
-		$('#ci_nh').append($('<li></li>').text(info));
-	});
 }
 
 function clearCovid19() {
-	var canvasConfirmed = document.getElementById("covid19_confirmed");
-	var canvasRecovered = document.getElementById("covid19_recovered");
-	var canvasDeaths = document.getElementById("covid19_deaths");
-
-	context = canvasConfirmed.getContext('2d');
-	context.clearRect(0, 0, canvasConfirmed.width, canvasConfirmed.height);
-
-	context = canvasRecovered.getContext('2d');
-	context.clearRect(0, 0, canvasRecovered.width, canvasRecovered.height);
-
-	context = canvasDeaths.getContext('2d');
-	context.clearRect(0, 0, canvasDeaths.width, canvasDeaths.height);
-
-	$('#covid19_confirmed_enable').hide();
-	$('#covid19_recovered_enable').hide();
-	$('#covid19_deaths_enable').hide();
+	$('#ci_covid19_section').hide();
 }
 
 function isArrayNoneZero(array) {
@@ -354,10 +413,24 @@ function isArrayNoneZero(array) {
 
 // show Covid-19 statistics
 function showCovid19(data) {
+	clearCovid19();
 
 	var canvasConfirmed = document.getElementById("covid19_confirmed");
 	var canvasRecovered = document.getElementById("covid19_recovered");
 	var canvasDeaths = document.getElementById("covid19_deaths");
+
+	var context = canvasConfirmed.getContext('2d');
+	context.clearRect(0, 0, canvasConfirmed.width, canvasConfirmed.height);
+
+	context = canvasRecovered.getContext('2d');
+	context.clearRect(0, 0, canvasRecovered.width, canvasRecovered.height);
+
+	context = canvasDeaths.getContext('2d');
+	context.clearRect(0, 0, canvasDeaths.width, canvasDeaths.height);
+
+	$('#covid19_confirmed_enable').hide();
+	$('#covid19_recovered_enable').hide();
+	$('#covid19_deaths_enable').hide();
 
 	var dataConfirmed = {
 		"xName": "Days",
@@ -395,124 +468,153 @@ function showCovid19(data) {
 		]
 	};
 	
-	if (isArrayNoneZero(data.covid19.confirmedDaily)) {
+	var confirmedDaily = isArrayNoneZero(data.covid19.confirmedDaily);
+	if (confirmedDaily) {
 		chartify(canvasConfirmed, dataConfirmed, {
 			"dataColor": "blue"
 		});
 		$('#covid19_confirmed_enable').show();
 	}
 
-	if (isArrayNoneZero(data.covid19.recoveredDaily)) {
+	var recoveredDaily = isArrayNoneZero(data.covid19.recoveredDaily);
+	if (recoveredDaily) {
 		chartify(canvasRecovered, dataRecovered, {
 			"dataColor": "green"
 		});
 		$('#covid19_recovered_enable').show();
 	}
 
-	if (isArrayNoneZero(data.covid19.deathsDaily)) {
+	var deathsDaily = isArrayNoneZero(data.covid19.deathsDaily);
+	if (deathsDaily) {
 		chartify(canvasDeaths, dataDeaths, {
 			"dataColor": "black"
 		});
 		$('#covid19_deaths_enable').show();
 	}
+
+	if (confirmedDaily || recoveredDaily || deathsDaily) {
+		$('#ci_covid19_section').show();
+	}
+	
 }
 
 function clearNews() {
-	document.getElementById('newsContainer').innerHTML = '';
+	$('#newsContainer').html('');
 }
 
 function showNews(data) {
-	data.news.forEach(function (news) {
-		if (news.description != 'text/plain...') {
-			news['description_enable'] = true;
-		} else {
-			news['description_enable'] = false;
-		}
-		if (news.image != 'None') {
-			news['image_enable'] = true;
-		} else {
-			news['image_enable'] = false;
-		}
-	})
-	const source = document.getElementById('newsTemplate').innerHTML;
-	const template = Handlebars.compile(source);
-	document.getElementById('newsContainer').innerHTML = template(data);
+	clearNews();
+	// check if there are any news
+	if (data.news.length > 0) {
+		data.news.forEach(function (news) {
+			if (news.description != 'text/plain...') {
+				news['description_enable'] = true;
+			} else {
+				news['description_enable'] = false;
+			}
+			if (news.image != 'None') {
+				news['image_enable'] = true;
+			} else {
+				news['image_enable'] = false;
+			}
+		})
+		// use Handlebar to generate HTML
+		const source = $('#newsTemplate').html();
+		const template = Handlebars.compile(source);
+		$('#newsContainer').html(template(data));
+	} else {
+		$('#newsContainer').html('<p>No News was found</p>');
+	}
 }
 
 function clearWeather() {
 	localWeather.html('');
-	updateLocalPopup();
+	updateLocalInformations();
 }
 
 function showWeather(data) {
-	localWeather.html('<h5>Weather</h5>');
+	clearWeather();
+		if (data.weather.length > 0) {
+		localWeather.html('<h5>Weather</h5>');
 
-	// define columns titles
-	var row_titles = $("<tr></tr>")
-		// first 3 columns
-		.append($("<th></th>").text(''))
-		.append($("<th></th>").text('Current'))
-		.append($("<th></th>").text('+1 day'));
-		// 4th and more columns
-	for (var i=2; i<data.weather.length; i++) {
-		row_titles.append($("<th></th>").text('+'+i+' days'));
+		// define columns titles
+		var row_titles = $("<tr></tr>")
+			// first 3 columns
+			.append($("<th></th>").text(''))
+			.append($("<th></th>").text('Current'))
+			.append($("<th></th>").text('+1 day'));
+			// 4th and more columns
+		for (var i=2; i<data.weather.length; i++) {
+			row_titles.append($("<th></th>").text('+'+i+' days'));
+		}
+		
+		// define table rows and their labels
+		var rows = {};
+		rows['temperature'] = $("<tr></tr>").append($("<td></td>").html('Temp<br> &deg;C'));
+		rows['pressure'] = $("<tr></tr>").append($("<td></td>").html('Pressure<br>hPa'));
+		rows['humidity'] = $("<tr></tr>").append($("<td></td>").html('Humidity<br>%'));
+		rows['wind_speed'] = $("<tr></tr>").append($("<td></td>").html('Wind speed<br>metre/sec'));
+		rows['clouds'] = $("<tr></tr>").append($("<td></td>").html('Clouds<br>%'));
+		data.weather.forEach(function(point) {
+			rows['temperature'].append($("<td></td>").html(point.temperature.toFixed(1)));
+			rows['pressure'].append($("<td></td>").html(point.pressure.toFixed(0))); 
+			rows['humidity'].append($("<td></td>").html(point.humidity.toFixed(0)));
+			rows['wind_speed'].append($("<td></td>").html(point.wind_speed.toFixed(1)));
+			rows['clouds'].append($("<td></td>").html(point.clouds.toFixed(0)));
+		})
+
+		// define empty table
+		var table = $("<table></table>").attr("class", "table");
+		// load columns titles to table
+		table.append($("<thead></thead>").append(row_titles));
+		// load rows to table
+		var table_body = $("<tbody></tbody>");
+		for (var key in rows) {
+			table_body.append(rows[key]);
+		}
+		table.append(table_body);
+		// load table to dedicated HTML element
+		localWeather.append(table);
+
+		localWeather.append('<hr>');
+		updateLocalInformations();
 	}
-	
-	// define table rows and their labels
-	var rows = {};
-	rows['temperature'] = $("<tr></tr>").append($("<td></td>").html('Temp<br> &deg;C'));
-	rows['pressure'] = $("<tr></tr>").append($("<td></td>").html('Pressure<br>hPa'));
-	rows['humidity'] = $("<tr></tr>").append($("<td></td>").html('Humidity<br>%'));
-	rows['wind_speed'] = $("<tr></tr>").append($("<td></td>").html('Wind speed<br>metre/sec'));
-	rows['clouds'] = $("<tr></tr>").append($("<td></td>").html('Clouds<br>%'));
-	data.weather.forEach(function(point) {
-		rows['temperature'].append($("<td></td>").html(point.temperature.toFixed(1)));
-		rows['pressure'].append($("<td></td>").html(point.pressure.toFixed(0))); 
-		rows['humidity'].append($("<td></td>").html(point.humidity.toFixed(0)));
-		rows['wind_speed'].append($("<td></td>").html(point.wind_speed.toFixed(1)));
-		rows['clouds'].append($("<td></td>").html(point.clouds.toFixed(0)));
-	})
-
-	// define empty table
-	var table = $("<table></table>").attr("class", "table");
-	// load columns titles to table
-	table.append($("<thead></thead>").append(row_titles));
-	// load rows to table
-	var table_body = $("<tbody></tbody>");
-	for (var key in rows) {
-		table_body.append(rows[key]);
-	}
-	table.append(table_body);
-	// load table to dedicated HTML element
-	localWeather.append(table);
-
-	localWeather.append('<hr>');
-	updateLocalPopup();
 }
 
 function clearAirQuality() {
 	airQualityWeather.html('');
-	updateLocalPopup();
+	updateLocalInformations();
 }
 
 function showAirQuality(data) {
-	airQualityWeather.html('<h5>Air quality: '+data.airQuality.aqius+'</h5><p>The lower index, the better, cleaner air.</p><hr>');
-	updateLocalPopup();
+	clearAirQuality();
+	if (data.airQuality.aqius != null) {
+		airQualityWeather.html('<h5>Air quality: '+data.airQuality.aqius+'</h5><p>The lower index, the better, cleaner air.</p><hr>');
+		updateLocalInformations();
+	}
 }
 
 function clearSolar() {
 	solarWeather.html('');
-	updateLocalPopup();
+	updateLocalInformations();
 }
 
 function showSolar(data) {
-	solarWeather.html('<h5>Solar irradiance '+data.solar.gti.toFixed(0)+'</h5><p>The solar irradiance is provided in kWh per year. This is total solar resource available to fixed flat plate system tilted towards the equator at an angle equal to the latitude.</p>');
-	updateLocalPopup();
+	clearSolar();
+	if (data.solar.gti != null) {
+		solarWeather.html('<h5>Solar irradiance '+data.solar.gti.toFixed(0)+'</h5><p>The solar irradiance is provided in kWh per year. This is total solar resource available to fixed flat plate system tilted towards the equator at an angle equal to the latitude.</p>');
+		updateLocalInformations();
+	}
 }
 
 function clearEarthQuakes() {
 	earthQuakeLayer.clearLayers();
 	earthQuakeCluster.clearLayers();
+}
+
+function prepareEarthquakeContent(eq) {
+	var earthquakeContent = '<p>Magnitude: '+eq.magnitude+'<br>Date: '+eq.datetime+'</p>';
+	return earthquakeContent;
 }
 
 function showEarthQuakes(data, type) {
@@ -524,10 +626,35 @@ function showEarthQuakes(data, type) {
 		shape: 'circle',
 		prefix: 'bi',
 	  });
+
 	data.earthQuakes.forEach(function(eq) {
+
+		// for each earthquake define own marker and attach to it eq object
 		var marker = L.marker(L.latLng(eq.lat, eq.lng), {
-			icon: eqIcon
-		}).bindPopup('<h5>Earthquake</h5><p>Magnitude: '+eq.magnitude+'<br>Date: '+eq.datetime+'</p>');
+			icon: eqIcon,
+			eq: eq,
+		});
+
+		// define Popup for big screens
+		var popupHeader = '<h5>Earthquake</h5>';
+		var popupContent = prepareEarthquakeContent(eq);
+		var popup = L.popup({maxWidth: 500, minWidth: 300}).setContent(popupHeader+popupContent);
+		marker.bindPopup(popup);
+
+		// assing on click action to each marker
+		marker.on('click', function(event){
+			if (isMobile()) {
+				// use Bootstrap modal on small screen
+				// need to close popup, because its open automaticaly
+				event.target.closePopup();
+				// update modal contener
+				$('#earthquakeModalLabel').html('Earthquake');
+				$('#earthquakeContainer').html(prepareEarthquakeContent(event.target.options.eq));
+				// show modal
+				new bootstrap.Modal(document.getElementById('earthquakeModal')).show();
+			}
+		});
+
 		switch(type){
 			case 'noCluster': {
 				marker.addTo(earthQuakeLayer);
@@ -543,6 +670,11 @@ function clearWiki() {
 	wikiLayer.clearLayers();
 }
 
+function prepareWikiContent(entry) {
+	var wikiContent = '<p>'+entry.summary+'</p><br><a href=https://'+entry.wikipediaUrl+' target="_blank">Click here to go to Wikipedia.org</a>';	
+	return wikiContent;
+}
+
 function showWiki(data) {
 	clearWiki();
 
@@ -552,17 +684,47 @@ function showWiki(data) {
 		shape: 'circle',
 		prefix: 'bi',
 	  });
+
 	data.wiki.forEach(function(entry) {
-		L.marker(L.latLng(entry.lat, entry.lng), {
-			icon: wikiIcon
-		}).bindPopup('<h5>'+entry.title+'</h5><p>'+entry.summary+'</p><br><a href=https://'+entry.wikipediaUrl+' target="_blank">Click here to go to Wikipedia.org</a>')
-		.addTo(wikiLayer);
+
+		// for each wiki entry define own marker and attach to it entry object
+		var marker = L.marker(L.latLng(entry.lat, entry.lng), {
+			icon: wikiIcon,
+			entry: entry,
+		});
+
+		// define Popup for big screens
+		var popupHeader = '<h5>'+entry.title+'</h5>';
+		var popupContent = prepareWikiContent(entry);
+		var popup = L.popup({maxWidth: 500, minWidth: 300}).setContent(popupHeader+popupContent);
+		marker.bindPopup(popup);
+
+		// assing on click action to each marker
+		marker.on('click', function(event){
+			if (isMobile()) {
+				// use Bootstrap modal on small screen
+				// need to close popup, because its open automaticaly
+				event.target.closePopup();
+				// update modal contenr
+				$('#wikiModalLabel').html('<h5>'+event.target.options.entry.title+'</h5>');
+				$('#wikiContainer').html(prepareWikiContent(event.target.options.entry));
+				// show modal
+				new bootstrap.Modal(document.getElementById('wikiModal')).show();
+			}
+		});
+
+		marker.addTo(wikiLayer);
 	});
 }
 
 function clearCharge() {
 	chargeLayer.clearLayers();
 	chargeCluster.clearLayers();
+}
+
+function prepareChargeContent(station) {
+	var chargeContent = '<p>Usage cost: '+station.UsageCost+'<br>Connections: '+station.Connections.length+'<br>Address: '+station.AddressInfo.AddressLine1+', '+station.AddressInfo.Town+', '+station.AddressInfo.Postcode+', '+'</p>';
+	return chargeContent;
 }
 
 function showCharge(data, type) {
@@ -576,9 +738,33 @@ function showCharge(data, type) {
 	  });
 
 	data.charge.forEach(function(station) {
+
+		// for each charge station define own marker and attach to it charge object
 		var marker = L.marker(L.latLng(station.AddressInfo.Latitude, station.AddressInfo.Longitude), {
-			icon: chargerIcon
-		}).bindPopup('<h5>Charge station</h5><p>Usage cost: '+station.UsageCost+'<br>Connections: '+station.Connections.length+'<br>Address: '+station.AddressInfo.AddressLine1+', '+station.AddressInfo.Town+', '+station.AddressInfo.Postcode+', '+'</p>');
+			icon: chargerIcon,
+			station: station,
+		});
+		
+		// define Popup for big screens
+		var popupHeader = '<h5>Charge station</h5>';
+		var popupContent = prepareChargeContent(station);
+		var popup = L.popup({maxWidth: 500, minWidth: 300}).setContent(popupHeader+popupContent);
+		marker.bindPopup(popup);
+
+		// assing on click action to each marker
+		marker.on('click', function(event){
+			if (isMobile()) {
+				// use Bootstrap modal on small screen
+				// need to close popup, because its open automaticaly
+				event.target.closePopup();
+				// update modal contener
+				$('#chargeModalLabel').html('Charge station');
+				$('#chargeContainer').html(prepareChargeContent(event.target.options.station));
+				// show modal
+				new bootstrap.Modal(document.getElementById('chargeModal')).show();
+			}
+		});
+		
 		switch(type){
 			case 'noCluster': {
 				marker.addTo(chargeLayer);
@@ -596,6 +782,16 @@ function clearWebCams() {
 	webcamsCluster.clearLayers();
 }
 
+function prepareWebCamsContent(camera) {
+	var webCamsContent;
+	if (camera.player.live.available === true) {
+		webCamsContent = '<a href='+camera.player.live.embed+' target="_blank"><img src='+camera.image.current.preview+' class="img-fluid"></a><p>Live view available</p>';
+	} else {
+		webCamsContent = '<img src='+camera.image.current.preview+' class="img-fluid"><p>Live view NOT available</p>';
+	}
+	return webCamsContent;
+}
+
 function showWebCams(data, type) {
 	clearWebCams();
 
@@ -607,16 +803,33 @@ function showWebCams(data, type) {
 	});
 
 	data.webCams.forEach(function(camera) {
-		var popupContent;
-		if (camera.player.live.available === true) {
-			popupContent = '<h5>Web Camera</h5><a href='+camera.player.live.embed+' target="_blank"><img src='+camera.image.current.preview+' class="img-fluid"></a><p>Live view available</p>';
-		} else {
-			popupContent = '<h5>Web Camera</h5><img src='+camera.image.current.preview+' class="img-fluid"><p>Live view NOT available</p>';
-		}
-		var popup = L.popup({maxWidth: 500, minWidth: 300}).setContent(popupContent);
+		
+		// for each camera define own marker and attach to it camera object
 		var marker = L.marker(L.latLng(camera.location.latitude, camera.location.longitude), {
-			icon: webcamsIcon
-		}).bindPopup(popup);
+			icon: webcamsIcon,
+			camera: camera,
+		});
+
+		// define Popup for big screens
+		var popupHeader = '<h5>Web Camera</h5>';
+		var popupContent = prepareWebCamsContent(camera);
+		var popup = L.popup({maxWidth: 500, minWidth: 300}).setContent(popupHeader+popupContent);
+		marker.bindPopup(popup);
+
+		// assing on click action to each marker
+		marker.on('click', function(event){
+			if (isMobile()) {
+				// use Bootstrap modal on small screen
+				// need to close popup, because its open automaticaly
+				event.target.closePopup();
+				// update modal contener
+				$('#webCamsModalLabel').html('Web Camera');
+				$('#webCamsContainer').html(prepareWebCamsContent(event.target.options.camera));
+				// show modal
+				new bootstrap.Modal(document.getElementById('webCamsModal')).show();
+			}
+		});
+		
 		switch(type){
 			case 'noCluster': {
 				marker.addTo(webcamsLayer);
@@ -634,12 +847,15 @@ var localWeather = $('<div></div>').html('');
 var airQualityWeather = $('<div></div>').html('');
 var solarWeather = $('<div></div>').html('');
 
-function updateLocalPopup(){
-	var localPopupContent = $('<div></div>');
-	localPopupContent.append(localWeather);
-	localPopupContent.append(airQualityWeather);
-	localPopupContent.append(solarWeather);
-	localPopup.setContent(localPopupContent.html());
+function updateLocalInformations(){
+	var localContent = $('<div></div>');
+	localContent.append(localWeather);
+	localContent.append(airQualityWeather);
+	localContent.append(solarWeather);
+	// update popup
+	localPopup.setContent(localContent.html());
+	// update modal
+	$('#localInfoContainer').html(localContent.html());
 }
 
 function clearLocalMarker() {
@@ -656,9 +872,31 @@ function showLocalMarker(latlng){
 		prefix: 'bi',
 	});
 
-	L.marker(latlng, {
-		icon: localIcon
-	}).bindPopup(localPopup).addTo(localLayer).openPopup();
+	// define marker
+	var marker = L.marker(latlng, {
+		icon: localIcon,
+	});
+	
+	// assign popup to marker and open it, if screen is big
+	marker.bindPopup(localPopup);
+	marker.addTo(localLayer);
+	if (!isMobile()) {
+		marker.openPopup();
+	}
+	
+	// assing on click action marker and use Bootstrap modal, if screen is small
+	marker.on('click', function(event){
+		if (isMobile()) {
+			// need to close popup, because its open automaticaly
+			event.target.closePopup();			
+			// show modal
+			new bootstrap.Modal(document.getElementById('localInfoModal')).show();
+		}
+	});
+	// define modal header
+	$('#localInfoModalLabel').html('Local information');
+	
+	
 
 }
 
@@ -672,8 +910,8 @@ function clearAllClusters(){
 function clearAllLayers(){
 	webcamsLayer.clearLayers();
 	chargeLayer.clearLayers();
-	wikiLayer.clearLayers()
 	earthQuakeLayer.clearLayers();
+	wikiLayer.clearLayers();
 	localLayer.clearLayers();
 }
 
@@ -682,7 +920,7 @@ function clearAllLayers(){
 // ########################################################################
 
 function getWebCamsByPosition(latlng) {
-	clearWebCams();
+	webCamsBtn.state('searching');
 	$.ajax({
 		url: "php/getWebCams.php",
 		type: 'POST',
@@ -693,9 +931,11 @@ function getWebCamsByPosition(latlng) {
 			longitude: latlng.lng,
 		},		
 		success: function(result) {
+			webCamsBtn.state('ready');
 			showWebCams(result, 'noCluster');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
+			webCamsBtn.state('ready');
 			console.log("request failed");
 			console.log(jqXHR);
 		}
@@ -703,7 +943,7 @@ function getWebCamsByPosition(latlng) {
 }
 
 function getWebCamsByCountry(countryId) {
-	clearWebCams();
+	webCamsBtn.state('searching');
 	$.ajax({
 		url: "php/getWebCams.php",
 		type: 'POST',
@@ -725,7 +965,7 @@ function getWebCamsByCountry(countryId) {
 }
 
 function getChargeByPosition(latlng) {
-	clearCharge();
+	chargeBtn.state('searching');
 	$.ajax({
 		url: "php/getCharge.php",
 		type: 'POST',
@@ -736,9 +976,11 @@ function getChargeByPosition(latlng) {
 			longitude: latlng.lng,
 		},		
 		success: function(result) {
+			chargeBtn.state('ready');
 			showCharge(result, 'noCluster');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
+			chargeBtn.state('ready');
 			console.log("request failed");
 			console.log(jqXHR);
 		}
@@ -746,7 +988,7 @@ function getChargeByPosition(latlng) {
 }
 
 function getChargeByCountry(countryId) {
-	clearCharge();
+	chargeBtn.state('searching');
 	$.ajax({
 		url: "php/getCharge.php",
 		type: 'POST',
@@ -768,7 +1010,6 @@ function getChargeByCountry(countryId) {
 }
 
 function getWiki(latlng) {
-	clearWiki();
 	$.ajax({
 		url: "php/getWiki.php",
 		type: 'POST',
@@ -789,7 +1030,7 @@ function getWiki(latlng) {
 }
 
 function getEarthQuakesByPosition(latlng) {
-	clearEarthQuakes();
+	earthQuakesBtn.state('searching');
 	$.ajax({
 		url: "php/getEarthQuakes.php",
 		type: 'POST',
@@ -800,9 +1041,11 @@ function getEarthQuakesByPosition(latlng) {
 			longitude: latlng.lng,
 		},		
 		success: function(result) {
+			earthQuakesBtn.state('ready');
 			showEarthQuakes(result, 'noCluster');
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
+			earthQuakesBtn.state('ready');
 			console.log("request failed");
 			console.log(jqXHR);
 		}
@@ -810,7 +1053,7 @@ function getEarthQuakesByPosition(latlng) {
 }
 
 function getEarthQuakesByCountry(countryId) {
-	clearEarthQuakes();
+	earthQuakesBtn.state('searching');
 	var bounds = borderCapitolLayer.getBounds();
 	$.ajax({
 		url: "php/getEarthQuakes.php",
@@ -837,9 +1080,8 @@ function getEarthQuakesByCountry(countryId) {
 }
 
 function getSolar(latlng) {
-	clearSolar();
 	$.ajax({
-		url: "php/getSolar2.php",
+		url: "php/getSolar.php",
 		type: 'POST',
 		dataType: 'json',
 		data: {
@@ -857,7 +1099,6 @@ function getSolar(latlng) {
 }
 
 function getAirQuality(latlng) {
-	clearAirQuality();
 	$.ajax({
 		url: "php/getAirQuality.php",
 		type: 'POST',
@@ -877,7 +1118,6 @@ function getAirQuality(latlng) {
 }
 
 function getWeather(latlng) {
-	clearWeather();
 	$.ajax({
 		url: "php/getWeather.php",
 		type: 'POST',
@@ -897,7 +1137,6 @@ function getWeather(latlng) {
 }
 
 function getNews(countryId) {
-	clearNews();
 	$.ajax({
 		url: "php/getNews.php",
 		type: 'POST',
@@ -917,7 +1156,6 @@ function getNews(countryId) {
 }
 
 function getCovid19(countryId) {
-	clearCovid19();
 	$.ajax({
 		url: "php/getCovid19.php",
 		type: 'POST',
@@ -936,7 +1174,6 @@ function getCovid19(countryId) {
 }
 
 function getHolidays(countryId) {
-	clearHolidays();
 	var date = new Date();
 	var year = date.getFullYear();
 	$.ajax({
@@ -958,7 +1195,6 @@ function getHolidays(countryId) {
 }
 
 function getExchangeRates(currency) {
-	clearExchangeRates();
 	$.ajax({
 		url: "php/getExchangeRate.php",
 		type: 'POST',
@@ -977,7 +1213,6 @@ function getExchangeRates(currency) {
 }
 
 function getFlagLang(countryId) {
-	clearFlagLang();
 	$.ajax({
 		url: "php/getFlagLang.php",
 		type: 'POST',
@@ -995,20 +1230,35 @@ function getFlagLang(countryId) {
 	});
 }
 
-function getCountryInformation(data){
-	showCoreInfo(data);
-	getFlagLang(data.countryId);
-	getExchangeRates(data.openCage.currency.iso_code);
-	getHolidays(data.countryId);
-	getCovid19(data.countryId);
-	getNews(data.countryId);
+function processCoreInfo(data){
+	// validate new country
+	if (data.countryId != null) {
+		if (data.countryId.countryName != null && data.countryId.iso_a2 != null && data.countryId.iso_a3 != null) {
+			countryId = data.countryId;
+			showCoreInfo(data);
+			clearFlagLang();
+			getFlagLang(data.countryId);
+			clearHolidays();
+			getHolidays(data.countryId);
+			clearCovid19();
+			getCovid19(data.countryId);
+			clearNews();
+			getNews(data.countryId);
+			clearExchangeRates();
+			if (data.openCage != null) {
+				if (data.openCage.currency != null) {
+					if (data.openCage.currency.iso_code != null) {
+						getExchangeRates(data.openCage.currency.iso_code);
+					}
+				}
+			}
+		}
+	}
 }
 
 // obtain country core informations based on name
 function getCountryByName() {
-	
 	fittingWaitingEnable();
-
 	$.ajax({
 		url: "php/getCountry.php",
 		type: 'POST',
@@ -1021,7 +1271,7 @@ function getCountryByName() {
 		},		
 		success: function(result) {
 			fittingWaitingDisable();
-			getCountryInformation(result);
+			processCoreInfo(result);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			fittingWaitingDisable();
@@ -1035,9 +1285,7 @@ $('#countryList').on('change', getCountryByName);
 
 // obtain country core informations based on user's position
 function getCountryByPosition() {
-	
 	localisationWaitingEnable();
-	
 	var options = {
 		enableHighAccuracy: true,
 		timeout: 5000,
@@ -1057,7 +1305,7 @@ function getCountryByPosition() {
 				localisationWaitingDisable();
 				// select country on drop down list and update the map
 				$('#countryList').val(result.countryBorders.properties.iso_a2);
-				getCountryInformation(result);
+				processCoreInfo(result);
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				localisationWaitingDisable();
@@ -1068,6 +1316,7 @@ function getCountryByPosition() {
 	}
 	function error(err) {
 		localisationWaitingDisable();
+		getCountryByName();
 		alert('This website does not have access to your location. You can still select country from drop down menu.');
 		console.warn(`ERROR(${err.code}): ${err.message}`);
 	}
@@ -1083,14 +1332,20 @@ $(window).on('load', function () {
 
 	// get information about specific location
 	gtmap.on('dblclick', function(event) {
-		clearLocalMarker();
 		showLocalMarker(event.latlng);
+		clearWeather();
 		getWeather(event.latlng);
+		clearAirQuality();
 		getAirQuality(event.latlng);
+		clearSolar();
 		getSolar(event.latlng);
+		clearEarthQuakes();
 		getEarthQuakesByPosition(event.latlng);
+		clearWiki();
 		getWiki(event.latlng);
+		clearCharge();
 		getChargeByPosition(event.latlng);
+		clearWebCams();
 		getWebCamsByPosition(event.latlng);
 	});
 
@@ -1107,16 +1362,11 @@ $(window).on('load', function () {
 															   .val(country.iso_a2)
 															   .attr('iso_a3', country.iso_a3));
 			});
-			
 			// set United Kingdom as default country
-			countryId.countryName = 'United Kingdom';
-			countryId.iso_a2 = 'GB';
-			countryId.iso_a3 = 'GBR';
 			$('#countryList').val('GB');
 			var southWest = L.latLng(49.96, -7.57);
 			var northEast = L.latLng(58.64,  1.68);
 			var bounds = L.latLngBounds(southWest, northEast);
-
 			gtmap.flyToBounds(bounds);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
@@ -1129,7 +1379,7 @@ $(window).on('load', function () {
 	getCountryByPosition();
 
 	setupClock();
-	
+
 	// display preloader
 	if ($('#preloader').length) {
 		$('#preloader').delay(100).fadeOut('slow', function () {
@@ -1137,3 +1387,10 @@ $(window).on('load', function () {
 		});
 	}
 });
+
+function isMobile() {
+	// detect mobile: if width or height are smaller than 760px
+	var width = window.matchMedia("only screen and (max-width: 760px)").matches;
+	var height = window.matchMedia("only screen and (max-height: 760px)").matches;
+	return (width || height);
+}

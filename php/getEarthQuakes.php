@@ -25,16 +25,15 @@
             $latitude = $_REQUEST['latitude'];
             $longitude = $_REQUEST['longitude'];
             $radius = 6371;    // unit = km, average Earth radius
-            
             // convert km to degrees
             $boxLat = $boxSize/($radius*pi()/180);          // noth, south
             $boxLon = $boxLat/cos(deg2rad(abs($latitude))); // east, west
-
+            // built 'box'
             $north = $latitude + $boxLat;
             $south = $latitude - $boxLat;
             $east = $longitude + $boxLon;
             $west = $longitude - $boxLon;
-
+            // build url query
             $url .= '&north='.$north;
             $url .= '&south='.$south;
             $url .= '&east='.$east;
@@ -47,21 +46,26 @@
             $url .= '&west='.$_REQUEST['west'];    
         }
     }
-
 	// request GeoNames
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
-	curl_close($ch);
-	// convert data to array
+    curl_close($ch);
+    // analyse response
+    $output['earthQuakes'] = array();
 	if ($response === FALSE) {
-		$output['earthQuakes']['error'] = 'Failed to get information from GeoNames';
+		$output['status']['error'] = 'Failed to get information from GeoNames';
 	} else {
-		$results = json_decode($response, TRUE);
-		// store information
-		$output['earthQuakes'] = $results['earthquakes'];
+        // convert data to array
+        $results = json_decode($response, TRUE);
+        if (!isset($results['earthquakes'])) {
+            $output['status']['error'] = 'Unable to decode JSON';
+        } else {
+            // store information
+			$output['earthQuakes'] = $results['earthquakes'];
+		}
 	}
 
     $output['status']['code'] = "200";

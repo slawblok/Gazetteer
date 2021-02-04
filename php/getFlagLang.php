@@ -30,7 +30,7 @@
         $url .= 'name/';
         $url .= urlencode($_REQUEST['countryId']['countryName']);
         $url .= '?fullText=true';
-    }
+	}
 	// request REST Countries
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
@@ -38,17 +38,27 @@
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
 	curl_close($ch);
-	// convert data to array
+	// analyse response
+	$output['restCountries'] = null;
 	if ($response === FALSE) {
-		$output['restCountries’']['error'] = 'Failed to get flag and language';
+		$output['status']['error'] = 'No response from API';
 	} else {
+		// convert data to array
 		$results = json_decode($response, TRUE);
-		// store information
-		$output['restCountries']['countryName'] = copy_if_exist('name', $results);
-		$output['restCountries']['iso_a3'] = copy_if_exist('alpha2Code', $results);
-		$output['restCountries']['iso_a2'] = copy_if_exist('alpha3Code', $results);
-		$output['restCountries']['flag'] = copy_if_exist('flag', $results);
-		$output['restCountries']['language'] = copy_if_exist('name', $results['languages'][0]);
+		if (!isset($results)) {
+			$output['status']['error'] = 'Unable to decode JSON';
+		} else {
+			// store information
+			$output['restCountries']['countryName'] = copy_if_exist('name', $results);
+			$output['restCountries']['iso_a3'] = copy_if_exist('alpha2Code', $results);
+			$output['restCountries']['iso_a2'] = copy_if_exist('alpha3Code', $results);
+			$output['restCountries']['flag'] = copy_if_exist('flag', $results);
+			if (!isset($results['languages'][0])) {
+				$output['status']['error'] = 'No languages';
+			} else {
+				$output['restCountries']['language'] = copy_if_exist('name', $results['languages'][0]);
+			}
+		}
     }
 
     $output['status']['code'] = "200";

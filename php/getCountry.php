@@ -4,7 +4,9 @@
 
 	// global variables
 	$apiKeys = json_decode(file_get_contents("APIKeys.json"));
-	$output = NULL;
+	$output['countryId']['countryName'] = NULL;
+	$output['countryId']['iso_a3'] = NULL;
+	$output['countryId']['iso_a2'] = NULL;
 
 	// helper function to save copy values
 	function copy_if_exist($key, $array) {
@@ -67,25 +69,33 @@
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
 	curl_close($ch);
-	// convert data to array
+	// analyse response
 	if ($response === FALSE) {
 		$output['openCage']['error'] = 'Failed to get information from OpenCage';
 	} else {
+		// convert data to array
 		$results = json_decode($response, TRUE);
-		// store information
-		//$output['openCageRaw'] = $results;
-		$componenets = $results['results'][0]['components'];
-		$output['openCage']['countryName'] = copy_if_exist('country', $componenets);
-		$output['openCage']['iso_a3'] = copy_if_exist('ISO_3166-1_alpha-3', $componenets);
-		$output['openCage']['iso_a2'] = copy_if_exist('ISO_3166-1_alpha-2', $componenets);
-		$output['openCage']['country_code'] = copy_if_exist('country_code', $componenets);
-		$annotations = $results['results'][0]['annotations'];
-		$output['openCage']['timezone'] = copy_if_exist('timezone', $annotations);
-		$output['openCage']['currency'] = copy_if_exist('currency', $annotations);
-		$output['openCage']['drive_on'] = copy_if_exist('drive_on', copy_if_exist('roadinfo', $annotations));
-		$output['openCage']['geometry'] = copy_if_exist('geometry', $results['results'][0]);
+		if (!(isset($results['results'][0]['components']))){
+			$output['openCage']['error'] = 'No components in response';
+		} else {
+			// store information
+			$componenets = $results['results'][0]['components'];
+			$output['openCage']['countryName'] = copy_if_exist('country', $componenets);
+			$output['openCage']['iso_a3'] = copy_if_exist('ISO_3166-1_alpha-3', $componenets);
+			$output['openCage']['iso_a2'] = copy_if_exist('ISO_3166-1_alpha-2', $componenets);
+			$output['openCage']['country_code'] = copy_if_exist('country_code', $componenets);
+			if (!(isset($results['results'][0]['annotations']))) {
+				$output['openCage']['error'] = 'No annotations in response';
+			} else {
+				$annotations = $results['results'][0]['annotations'];
+				$output['openCage']['timezone'] = copy_if_exist('timezone', $annotations);
+				$output['openCage']['currency'] = copy_if_exist('currency', $annotations);
+				$output['openCage']['drive_on'] = copy_if_exist('drive_on', copy_if_exist('roadinfo', $annotations));
+				$output['openCage']['geometry'] = copy_if_exist('geometry', $results['results'][0]);
+			}
+		}
 	}
-	
+		
 	// ########################################################################
 	// #                      countryBorders.geo.json                         #
 	// #                       find country polygon                           #
@@ -120,11 +130,11 @@
 								$output['countryId']['countryName'] = $output['openCage']['countryName'];
 							}
 							
-							// if the alfa 3 code in JSON does not exist (equal -99) then assign NULL
+							// if the alfa 3 code in JSON does not exist (equal -99) then use code from OpenCage
 							if ($feature['properties']['iso_a3'] != '-99') {
 								$output['countryId']['iso_a3'] = $feature['properties']['iso_a3'];	
 							} else {
-								$output['countryId']['iso_a3'] = NULL;
+								$output['countryId']['iso_a3'] = $output['openCage']['iso_a3'];
 							}
 							
 							// if the alfa 2 code in JSON does not exist (equal -99) then use code from OpenCage
@@ -163,7 +173,7 @@
 			}
         }
 	}
-	
+
 	// ########################################################################
 	// #                      https://www.geonames.org/                       # 
 	// #                 capital, population, area, bounding box              #
@@ -187,25 +197,29 @@
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
 	curl_close($ch);
-	// convert data to array
+	// analyse response
 	if ($response === FALSE) {
 		$output['geoNames']['error'] = 'Failed to get information from GeoNames';
 	} else {
+		// convert data to array
 		$results = json_decode($response, TRUE);
-		// store information
-		//$output['geoNamesRaw'] = $results;
-		$data = $results['geonames'][0];
-		$output['geoNames']['countryName'] = copy_if_exist('countryName', $data);
-		$output['geoNames']['iso_a3'] = copy_if_exist('isoAlpha3', $data);
-		$output['geoNames']['capital'] = copy_if_exist('capital', $data);
-		$output['geoNames']['population'] = copy_if_exist('population', $data);
-		$output['geoNames']['areaInSqKm'] = copy_if_exist('areaInSqKm', $data);
-		$output['geoNames']['east'] = copy_if_exist('east', $data);
-		$output['geoNames']['north'] = copy_if_exist('north', $data);
-		$output['geoNames']['south'] = copy_if_exist('south', $data);
-		$output['geoNames']['west'] = copy_if_exist('west', $data);
+		if (!(isset($results['geonames'][0]))) {
+			$output['geoNames']['error'] = 'No valid data';
+		} else {
+			// store information
+			$data = $results['geonames'][0];
+			$output['geoNames']['countryName'] = copy_if_exist('countryName', $data);
+			$output['geoNames']['iso_a3'] = copy_if_exist('isoAlpha3', $data);
+			$output['geoNames']['capital'] = copy_if_exist('capital', $data);
+			$output['geoNames']['population'] = copy_if_exist('population', $data);
+			$output['geoNames']['areaInSqKm'] = copy_if_exist('areaInSqKm', $data);
+			$output['geoNames']['east'] = copy_if_exist('east', $data);
+			$output['geoNames']['north'] = copy_if_exist('north', $data);
+			$output['geoNames']['south'] = copy_if_exist('south', $data);
+			$output['geoNames']['west'] = copy_if_exist('west', $data);
+		}
 	}
- 
+
 	// ########################################################################
 	// #                      https://opencagedata.com                        # 
 	// #                        capital coordinates                           #
@@ -231,20 +245,29 @@
 		curl_setopt($ch, CURLOPT_URL, $url);
 		$response=curl_exec($ch);
 		curl_close($ch);
-		// convert data to array
+		// analyse response
 		if ($response === FALSE) {
 			$output['capitalCoordinates’']['error'] = 'Failed to get capital coordinates';
 		} else {
+			// convert data to array
 			$results = json_decode($response, TRUE);
-			// store information
-			$componenets = copy_if_exist('components', $results['results'][0]);
-			$output['capitalCoordinates']['countryName'] = copy_if_exist('country', $componenets);
-			$output['capitalCoordinates']['iso_a3'] = copy_if_exist('ISO_3166-1_alpha-3', $componenets);
-			$output['capitalCoordinates']['iso_a2'] = copy_if_exist('ISO_3166-1_alpha-2', $componenets);
-			$output['capitalCoordinates']['city'] = copy_if_exist('city', $componenets);
-			$geometry = copy_if_exist('geometry', $results['results'][0]);
-			$output['capitalCoordinates']['longitude'] = copy_if_exist('lng', $geometry);
-			$output['capitalCoordinates']['latitude'] = copy_if_exist('lat', $geometry);
+			if (!(isset($results['results'][0]['components']))) {
+				$output['capitalCoordinates’']['error'] = 'No components in response';
+			} else {
+				// store information
+				$componenets = $results['results'][0]['components'];
+				$output['capitalCoordinates']['countryName'] = copy_if_exist('country', $componenets);
+				$output['capitalCoordinates']['iso_a3'] = copy_if_exist('ISO_3166-1_alpha-3', $componenets);
+				$output['capitalCoordinates']['iso_a2'] = copy_if_exist('ISO_3166-1_alpha-2', $componenets);
+				$output['capitalCoordinates']['city'] = copy_if_exist('city', $componenets);
+				if (!(isset($results['results'][0]['geometry']))) {
+					$output['capitalCoordinates’']['error'] = 'No geometry in response';
+				} else {
+					$geometry = copy_if_exist('geometry', $results['results'][0]);
+					$output['capitalCoordinates']['longitude'] = copy_if_exist('lng', $geometry);
+					$output['capitalCoordinates']['latitude'] = copy_if_exist('lat', $geometry);
+				}
+			}
 		}
 	}
 

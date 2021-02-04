@@ -27,33 +27,42 @@
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
 	curl_close($ch);
-	// convert data to array
+	// analyse response
+	$weather = array();
 	if ($response === FALSE) {
-		$output['weather']['error'] = 'Failed to get weather information';
+		$output['status']['error'] = 'No response from API';
 	} else {
-		$results = json_decode($response, TRUE);
-		// store information
-		$weather = array();
-		// take current weather
-		$point['temperature'] = $results['current']['temp']-273.15;
-		$point['pressure'] = $results['current']['pressure'];
-		$point['humidity'] = $results['current']['humidity'];
-		$point['wind_speed'] = $results['current']['wind_speed'];
-		$point['clouds'] = $results['current']['clouds'];
-		array_push($weather, $point);
-		foreach ($results['daily'] as $id => $day) {
-			// take also weather for next 1-3 days
-			if ($id >= 1 && $id <=3) {
-				$point['temperature'] = $day['temp']['day']-273.15;
-				$point['pressure'] = $day['pressure'];
-				$point['humidity'] = $day['humidity'];
-				$point['wind_speed'] = $day['wind_speed'];
-				$point['clouds'] = $day['clouds'];
-				array_push($weather, $point);
+		// convert data to array
+		$results = json_decode($response, TRUE);	
+		if (!isset($results['current'])) {
+			$output['status']['error'] = 'Unable to decode JSON';
+		} else {
+			// take current weather
+			$point['temperature'] = $results['current']['temp']-273.15;
+			$point['pressure'] = $results['current']['pressure'];
+			$point['humidity'] = $results['current']['humidity'];
+			$point['wind_speed'] = $results['current']['wind_speed'];
+			$point['clouds'] = $results['current']['clouds'];
+			array_push($weather, $point);
+			if (!isset($results['daily'])) {
+				$output['status']['error'] = 'No daily forecast';
+			} else {
+				foreach ($results['daily'] as $id => $day) {
+					// take also weather for next 1-3 days
+					if ($id >= 1 && $id <=3) {
+						$point['temperature'] = $day['temp']['day']-273.15;
+						$point['pressure'] = $day['pressure'];
+						$point['humidity'] = $day['humidity'];
+						$point['wind_speed'] = $day['wind_speed'];
+						$point['clouds'] = $day['clouds'];
+						array_push($weather, $point);
+					}
+				}
 			}
 		}
-		$output['weather'] = $weather;
 	}
+	// store information
+	$output['weather'] = $weather;
 
     $output['status']['code'] = "200";
     $output['status']['name'] = "ok";

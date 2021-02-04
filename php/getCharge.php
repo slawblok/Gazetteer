@@ -30,21 +30,26 @@
             $url .= '&maxresults=250';
         }
     }
-    
     // request Open Charge Map
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
-	curl_close($ch);
-	// convert data to array
+    curl_close($ch);
+    // analyse response
+    $output['charge'] = array();
 	if ($response === FALSE) {
-		$output['charge']['error'] = 'Failed to get charging station information';
+		$output['status']['error'] = 'Failed to get charging station information';
 	} else {
-		$results = json_decode($response, TRUE);
-		// store information
-        $output['charge'] = $results;
+        // convert data to array
+        $results = json_decode($response, TRUE);
+        if (!isset($results)) {
+            $output['status']['error'] = 'Unable to decode JSON';
+        } else {
+            // store information
+            $output['charge'] = $results;
+        }
     }
 
     $output['status']['code'] = "200";

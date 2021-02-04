@@ -29,22 +29,29 @@
     $url .= '/limit=50';    // max 50 in free plan
     $url .= '?key='.$apiKeys->webcams->key;
     $url .= '&show=webcams:location,image,player';
-    
     // request Web Cams
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
-	curl_close($ch);
-	// convert data to array
+    curl_close($ch);
+    // analyse response
+    $output['webCams'] = array();
 	if ($response === FALSE) {
-		$output['webCams']['error'] = 'Failed to get web cams information';
+		$output['status']['error'] = 'Failed to get web cams information';
 	} else {
+        // convert data to array
 		$results = json_decode($response, TRUE);
-		// store information
-        if ($results['status'] == 'OK') {
-            $output['webCams'] = $results['result']['webcams'];
+        if (!(isset($results['status']) && $results['result']['webcams'])) {
+            $output['status']['error'] = 'Unable to decode JSON';
+        } else {
+            if ($results['status'] != 'OK') {
+                $output['status']['error'] = 'API has not provided valid data';
+            } else {
+                // store information
+                $output['webCams'] = $results['result']['webcams'];
+            }
         }
     }
 

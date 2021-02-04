@@ -26,13 +26,14 @@
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
 	curl_close($ch);
+	// analyse response
 	$slug = null;
 	if ($response === FALSE) {
-		$output['covid19']['error'] = 'Failed to get list of countries';
+		$output['status']['error'] = 'Failed to get list of countries';
 	} else {
 		// convert data to array
 		$countries = json_decode($response, TRUE);
-		// find country slug baed on ISO Alfa 2 code
+		// find country slug based on ISO Alfa 2 code
 		foreach($countries as $countrie) {
 			if ($countrie['ISO2'] === $_REQUEST['countryId']['iso_a2']) {
 				$slug = $countrie['Slug'];
@@ -43,8 +44,14 @@
 	}
 
 	// once the slug was determined succesfuly, then request covid-19 data
-	if (!is_null($slug)) {
 
+	$days = array();
+	$confirmedDaily = array();
+	$recoveredDaily = array();
+	$deathsDaily = array();
+	if (is_null($slug)) {
+		$output['status']['error'] = 'No valid slug';
+	} else {
 		// build Covid-19 API URL
 		$url = $covid19BaseUrl;
 		$url .= 'total/dayone/country/';
@@ -56,43 +63,43 @@
 		curl_setopt($ch, CURLOPT_URL, $url);
 		$response=curl_exec($ch);
 		curl_close($ch);
+		// analyse response
 		if ($response === FALSE) {
 			// convert data to array
-			$output['covid19']['error'] = 'Failed to get covid-19 data';
+			$output['status']['error'] = 'Failed to get covid-19 data';
 		} else {
+			// convert data to array
 			$data = json_decode($response, TRUE);
-			// take only last 30 days and calculate daily change
-			$end = count($data)-1;
-			$start = $end-30;
-			$days = array();
-			$confirmedDaily = array();
-			$recoveredDaily = array();
-			$deathsDaily = array();
-			for ($i = $start; $i <= $end; $i++) {
-				// prepare labels for x axis
-				$k = $end-$i;
-				if (($k % 15 == 0)) {
-					array_push($days, $k.' days ago');
-				} else {
-					array_push($days, '');
+			if (array_key_exists('message', $data)) {
+				$output['status']['error'] = 'Response from API: '.$data['message'];
+			} else {
+				// take only last 30 days and calculate daily change
+				$end = count($data)-1;
+				$start = $end-30;
+				for ($i = $start; $i <= $end; $i++) {
+					// prepare labels for x axis
+					$k = $end-$i;
+					if (($k % 15 == 0)) {
+						array_push($days, $k.' days ago');
+					} else {
+						array_push($days, '');
+					}
+					// calculate daily change of confirmed cases
+					array_push($confirmedDaily, $data[$i]['Confirmed'] - $data[$i-1]['Confirmed']);
+					// calculate daily change of recovered cases
+					array_push($recoveredDaily, $data[$i]['Recovered'] - $data[$i-1]['Recovered']);
+					// calculate daily change of deaths cases
+					array_push($deathsDaily, $data[$i]['Deaths'] - $data[$i-1]['Deaths']);
 				}
-				// calculate daily change of confirmed cases
-				array_push($confirmedDaily, $data[$i]['Confirmed'] - $data[$i-1]['Confirmed']);
-				// calculate daily change of recovered cases
-				array_push($recoveredDaily, $data[$i]['Recovered'] - $data[$i-1]['Recovered']);
-				// calculate daily change of deaths cases
-				array_push($deathsDaily, $data[$i]['Deaths'] - $data[$i-1]['Deaths']);
+				$days[count($days)-1] = 'today';
 			}
-			// store data
-			$days[count($days)-1] = 'today';
-			$output['covid19']['days'] = $days;
-			$output['covid19']['confirmedDaily'] = $confirmedDaily;
-			$output['covid19']['recoveredDaily'] = $recoveredDaily;
-			$output['covid19']['deathsDaily'] = $deathsDaily;
-			
 		}
 	}
-
+	// store data
+	$output['covid19']['days'] = $days;
+	$output['covid19']['confirmedDaily'] = $confirmedDaily;
+	$output['covid19']['recoveredDaily'] = $recoveredDaily;
+	$output['covid19']['deathsDaily'] = $deathsDaily;
 
     $output['status']['code'] = "200";
     $output['status']['name'] = "ok";

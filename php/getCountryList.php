@@ -43,7 +43,6 @@
             $output['status']['code'] = "200";
             $output['status']['name'] = "ok";
             $output['status']['description'] = "Country list was decoded from JSON file";
-            
         }
     }
     

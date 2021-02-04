@@ -148,64 +148,74 @@
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						<div class="container">
-							<div class="row">
-							  <div class="col-sm">
-								<p><span id="ci_capitalInfo"></span><span class="ci_countryName"></span> (<span id="cs_countryCode"></span>).</p>
-							  </div>
-							  <div class="col-sm text-center">
-								<img id="ci_flag" src="https://restcountries.eu/data/tgo.svg">
-							  </div>
+						<div class="container" id="ci_country_section">
+							<div class="container">
+								<div class="row">
+								<div class="col-sm">
+									<p><span id="ci_capitalInfo"></span><span class="ci_countryName"></span> (<span id="cs_countryCode"></span>).</p>
+								</div>
+								<div class="col-sm text-center">
+									<img id="ci_flag" src="https://restcountries.eu/data/tgo.svg">
+								</div>
+								</div>
 							</div>
+							<p>The country spans over <span id="ci_area"></span> thousands of km<sup>2</sup>, with total population <span id="ci_population"></span> millions of people. They <span id="ci_language_section">use <span id="ci_language"></span> as primary language and </span>drives on <span id="ci_driveOn"></span> side of the road.</p>
+							<hr>
 						</div>
-						<p>The country spans over <span id="ci_area"></span> thousands of km<sup>2</sup>, with total population <span id="ci_population"></span> millions of people. They use <span id="ci_language"></span> as primary language and drives on <span id="ci_driveOn"></span> side of the road.</p>
-						<hr>
-						<div class="container">
-							<div class="row">
-							  <div class="col-sm text-center">
-								<canvas id="analogClock" width="200" height="200"></canvas>
-							  </div>
-							  <div class="col-sm">
-								<p>The <span id="ci_timeZoneName"></span> (<span id="ci_timeZoneNameShort"></span>) time zone is used; thus local time is <span id="ci_time"></span></p>
-							  </div>
+						<div class="container" id="ci_timezone_section">
+							<div class="container">
+								<div class="row">
+								<div class="col-sm text-center">
+									<canvas id="analogClock" width="200" height="200"></canvas>
+								</div>
+								<div class="col-sm">
+									<p>The <span id="ci_timeZoneName"></span> (<span id="ci_timeZoneNameShort"></span>) time zone is used; thus local time is <span id="ci_time"></span></p>
+								</div>
+								</div>
 							</div>
+							<hr>
 						</div>
-						<hr>
-						<p>The <span id="ci_currencyName"></span> (<span class="ci_currencySymbol"></span>) is legal currency.</p>
-						<div class="container">
-							<div class="row">
-							  <div class="col-sm">
-								<p>For 1 <span class="ci_currencySymbol"></span> you can get:</p>
-								<ul id="ci_buyMajor"></ul>
-							  </div>
-							  <div class="col-sm">
-								<p>You need:</p>
-								<ul id="ci_sellMajor"></ul>
-							  </div>
+						<div class="container" id="ci_currency_section">
+							<p>The <span id="ci_currencyName"></span> (<span class="ci_currencySymbol"></span>) is legal currency.</p>
+							<div class="container">
+								<div class="row">
+								<div class="col-sm">
+									<p>For 1 <span class="ci_currencySymbol"></span> you can get:</p>
+									<ul id="ci_buyMajor"></ul>
+								</div>
+								<div class="col-sm">
+									<p>You need:</p>
+									<ul id="ci_sellMajor"></ul>
+								</div>
+								</div>
 							</div>
+							<hr>
 						</div>
-						<hr>
-						<p>People of <span class="ci_countryName"></span> celebrate <span id="ci_nh_number"></span> National holidays in <span id="ci_nh_year"></span></p>
-						<ul id="ci_nh"></ul>
-						<hr>
-						<h1>Coronavirus information</h1>
-						<div id="covid19_confirmed_enable">
-							<p>Number of confirmed cases per day</p>
-							<canvas class="container-fluid" id="covid19_confirmed" height="300">
-								Canvas not supported!
-							</canvas>
+						<div class="container" id="ci_holiday_section">
+							<p>People of <span class="ci_countryName"></span> celebrate <span id="ci_nh_number"></span> National holidays in <span id="ci_nh_year"></span></p>
+							<ul id="ci_nh"></ul>
+							<hr>
 						</div>
-						<div id="covid19_recovered_enable">
-							<p>Number of recovered cases per day</p>
-							<canvas class="container-fluid" id="covid19_recovered" height="300">
-								Canvas not supported!
-							</canvas>
-						</div>
-						<div id="covid19_deaths_enable">
-							<p>Number of deaths per day</p>
-							<canvas class="container-fluid" id="covid19_deaths" height="300">
-								Canvas not supported!
-							</canvas>
+						<div class="container" id="ci_covid19_section">
+							<h1>Coronavirus information</h1>
+							<div id="covid19_confirmed_enable">
+								<p>Number of confirmed cases per day</p>
+								<canvas class="container-fluid" id="covid19_confirmed" height="300">
+									Canvas not supported!
+								</canvas>
+							</div>
+							<div id="covid19_recovered_enable">
+								<p>Number of recovered cases per day</p>
+								<canvas class="container-fluid" id="covid19_recovered" height="300">
+									Canvas not supported!
+								</canvas>
+							</div>
+							<div id="covid19_deaths_enable">
+								<p>Number of deaths per day</p>
+								<canvas class="container-fluid" id="covid19_deaths" height="300">
+									Canvas not supported!
+								</canvas>
+							</div>
 						</div>
 					</div>
 					<div class="modal-footer">
@@ -224,6 +234,96 @@
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 					<div class="modal-body" id="newsContainer">
+						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Modal: WebCams -->
+		<div class="modal fade" id="webCamsModal" tabindex="-1" aria-labelledby="webCamsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title" id="webCamsModalLabel"></h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="webCamsContainer">
+						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Modal: Charge stations -->
+		<div class="modal fade" id="chargeModal" tabindex="-1" aria-labelledby="chargeModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title" id="chargeModalLabel"></h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="chargeContainer">
+						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Modal: Earthquakes -->
+		<div class="modal fade" id="earthquakeModal" tabindex="-1" aria-labelledby="earthquakeModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title" id="earthquakeModalLabel"></h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="earthquakeContainer">
+						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Modal: Wiki -->
+		<div class="modal fade" id="wikiModal" tabindex="-1" aria-labelledby="wikiModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title" id="wikiModalLabel"></h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="wikiContainer">
+						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Modal: Local Information -->
+		<div class="modal fade" id="localInfoModal" tabindex="-1" aria-labelledby="localInfoModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title" id="localInfoModalLabel"></h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="localInfoContainer">
 						
 					</div>
 					<div class="modal-footer">

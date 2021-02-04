@@ -12,7 +12,6 @@
 	// ########################################################################
     // There is 1000 requests/month in free plan.
     // True/False to reduce API usage, durign development.
-    // If False, it will return fixed, dummy rates.
     $enable = $apiKeys->calendarific->enable;
 
 	$calendarificBaseUrl = 'https://calendarific.com/api/v2';
@@ -23,34 +22,39 @@
     $url .= 'api_key='.$apiKeys->calendarific->key;
     $url .= '&country='.$_REQUEST['countryId']['iso_a2'];
     $url .= '&year='.$_REQUEST['year'];
-	// request Calendarific
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($ch, CURLOPT_URL, $url);
-    $response = TRUE;
+    $nationalHolidays = array();
+    // request Calendarific
     if ($enable) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_URL, $url);
         $response=curl_exec($ch);
-    }
-    curl_close($ch);
-	// convert data to array
-	if ($response === FALSE) {
-		$output['calendarific']['error'] = 'Failed to get holidays';
-	} else {
-        // store information
-        $nationalHolidays = array();
-        if ($enable) {
+        curl_close($ch);
+        // analyse response
+        if ($response === FALSE) {
+            $output['status']['error'] = 'Failed to get holidays';
+        } else {
+            // convert data to array
             $results = json_decode($response, TRUE);
-            $holidays = $results['response']['holidays'];
-            // filter result by 'National holiday'
-            foreach($holidays as $holiday) {
-                if ($holiday['type'][0] === 'National holiday'){
-                    array_push($nationalHolidays, $holiday);
+            if (isset($results['response']['holidays'])) {
+                $output['status']['error'] = 'Unable to decode JSON';
+            } else {
+                $holidays = $results['response']['holidays'];
+                // filter result by 'National holiday'
+                foreach($holidays as $holiday) {
+                    foreach($holiday['type'] as $type) {
+                        if($type === 'National holiday') {
+                            array_push($nationalHolidays, $holiday);
+                            break;
+                        }
+                    }
                 }
             }
         }
-        $output['calendarific']=$nationalHolidays;   
     }
+    // store information
+    $output['calendarific']=$nationalHolidays;
 
     $output['status']['code'] = "200";
 	$output['status']['name'] = "ok";

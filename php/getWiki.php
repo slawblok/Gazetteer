@@ -22,7 +22,6 @@
     $url .= '&lat='.$_REQUEST['latitude'];
     $url .= '&lng='.$_REQUEST['longitude'];
     $url .= '&radius=20';   // max 20km in free service
-    
 	// request GeoNames
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
@@ -30,13 +29,19 @@
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$response=curl_exec($ch);
 	curl_close($ch);
-	// convert data to array
+	// analyse response
+	$output['wiki'] = array();
 	if ($response === FALSE) {
-		$output['wiki']['error'] = 'Failed to get information from GeoNames';
+		$output['status']['error'] = 'Failed to get information from GeoNames';
 	} else {
+		// convert data to array
 		$results = json_decode($response, TRUE);
-		// store information
-		$output['wiki'] = $results['geonames'];
+		if (!isset($results['geonames'])) {
+			$output['status']['error'] = 'Unable to decode JSON';
+		} else {
+			// store information
+			$output['wiki'] = $results['geonames'];
+		}
 	}
 
     $output['status']['code'] = "200";
