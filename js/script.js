@@ -144,10 +144,14 @@ function setupMap() {
 		new bootstrap.Modal(document.getElementById('newsModal')).show();
 	}).addTo(gtmap);
 
+	// add shadow to all buttons
+	// the sequence is important, buttons need to be defined first (above) prior applaying below shadow classes
+	$('.leaflet-top.leaflet-left > *').addClass('shadow rounded');
+
 }
 
 function fitMap(){
-	gtmap.flyToBounds(borderCapitolLayer.getBounds());
+	gtmap.fitBounds(borderCapitolLayer.getBounds());
 }
 
 function clearCoreInfo() {
@@ -340,40 +344,40 @@ function clearHolidays(){
 function monthName(number) {
 	switch(number) {
 		case 0: {
-			return 'January';
+			return 'Jan';
 		}
 		case 1: {
-			return 'February';
+			return 'Feb';
 		}
 		case 2: {
-			return 'March';
+			return 'Mar';
 		}
 		case 3: {
-			return 'April';
+			return 'Apr';
 		}
 		case 4: {
 			return 'May';
 		}
 		case 5: {
-			return 'June';
+			return 'Jun';
 		}
 		case 6: {
-			return 'July';
+			return 'Jul';
 		}
 		case 7: {
-			return 'August';
+			return 'Aug';
 		}
 		case 8: {
-			return 'September';
+			return 'Sep';
 		}
 		case 9: {
-			return 'October';
+			return 'Oct';
 		}
 		case 10: {
-			return 'November';
+			return 'Nov';
 		}
 		case 11: {
-			return 'December';
+			return 'Dec';
 		}
 	}
 }
@@ -389,7 +393,7 @@ function showHolidays(data) {
 		$('#ci_nh').empty();
 		data.calendarific.forEach(function(holiday) {
 			var datetime = holiday.date.datetime;
-			var dateFormated = datetime.day + ' of ' + monthName(datetime.month-1);
+			var dateFormated = datetime.day + ' ' + monthName(datetime.month-1);
 			var info = dateFormated+', '+holiday.name;
 			$('#ci_nh').append($('<li></li>').text(info));
 		});
